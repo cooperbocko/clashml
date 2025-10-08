@@ -1,11 +1,13 @@
 from dataclasses import dataclass
 from enum import Enum
+import string
+from tarfile import SYMTYPE
 
 @dataclass
 class Card:
     base_cost: int
-    faction: int
-    synergy: int
+    synergy1: int
+    synergy2: int
     base_index: int
     is_frontline: bool
     
@@ -13,111 +15,151 @@ class Card:
 class LeveledCard:
     card: Card
     level: int
+    row: int
+    col: int
     
     def get_cost(self):
         return (2 ** (self.level - 1)) * self.card.base_cost
     
     def get_index(self):
         return self.card.base_index + self.level - 1
-    
+     
 class Synergy(Enum):
     NOBEL = 0
     CLAN = 1
     GOBLIN = 2
     UNDEAD = 3
     ACE = 4
-    JUGGERNAUT: 5
-    BRAWLER: 6
-    RANGER: 7
-    ASSASSIN: 8
-    AVENGER: 9
-    THROWER: 10
+    JUGGERNAUT = 5
+    BRAWLER = 6
+    RANGER = 7
+    ASSASSIN = 8
+    AVENGER = 9
+    BLASTER = 10
+    MAGE = 11
+    ELECTRIC = 12
+    FIRE = 13
 
 class Merge: 
-    #all card types
     CARDS = {
     'KNIGHT' : Card(2, Synergy.NOBEL, Synergy.JUGGERNAUT, 0, True),
-    'PRINCESS' : Card(4, Synergy.NOBEL, Synergy.RANGER, 6, False),
-    'GOLDEN_KNIGHT' : Card(5, Synergy.NOBEL, Synergy.ASSASSIN, 9, True),
-    'PRINCE' : Card(3, Synergy.NOBEL, Synergy.BRAWLER, 3, True),
+    'PRINCE' : Card(3, Synergy.NOBEL, Synergy.BRAWLER, 4, True),
+    'PRINCESS' : Card(4, Synergy.NOBEL, Synergy.RANGER, 8, False),
+    'GOLDEN_KNIGHT' : Card(5, Synergy.NOBEL, Synergy.ASSASSIN, 12, True),
     
-    'ARCHER' : Card(2, Synergy.CLAN, Synergy.RANGER, 15, False),
-    'VALKYRIE' : Card(3, Synergy.CLAN, Synergy.AVENGER, 18, True),
-    'BARBARIAN' : Card(2, Synergy.CLAN, Synergy.BRAWLER, 12, True),
-    'ARCHER_QUEEN' : (5, Synergy.CLAN, Synergy.AVENGER, 21, False),
+    'ARCHER' : Card(2, Synergy.CLAN, Synergy.RANGER, 16, False),
+    'VALKYRIE' : Card(3, Synergy.CLAN, Synergy.AVENGER, 20, True),
+    'BARBARIAN' : Card(2, Synergy.CLAN, Synergy.BRAWLER, 24, True),
+    'ARCHER_QUEEN' : Card(5, Synergy.CLAN, Synergy.AVENGER, 28, False),
     
-    'DART_GOBLIN' : (3, Synergy.GOBLIN, Synergy.RANGER, 24, False),
-    'GOBLIN' : (2, Synergy.GOBLIN, Synergy.ASSASSIN, 27, True),
-    'SPEAR_GOBLIN' : (2, Synergy.GOBLIN, Synergy.THROWER, 30, False),
-    'GOBLIN_MACHINE' : (4, Synergy.GOBLIN, Synergy.JUGGERNAUT, 33, True),
+    'DART_GOBLIN' : Card(3, Synergy.GOBLIN, Synergy.RANGER, 32, False),
+    'GOBLIN' : Card(2, Synergy.GOBLIN, Synergy.ASSASSIN, 36, True),
+    'SPEAR_GOBLIN' : Card(2, Synergy.GOBLIN, Synergy.BLASTER, 40, False),
+    'GOBLIN_MACHINE' : Card(4, Synergy.GOBLIN, Synergy.JUGGERNAUT, 44, True),
     
-    'SKELETON_GIANT' : (3, Synergy.UNDEAD, Synergy.BRAWLER, 36, True),
-    'ROYAL_GHOST' : (4, Synergy.UNDEAD, Synergy.ASSASSIN, 39, True),
-    'SKELETON_BOMBER' : (2, Synergy.UNDEAD, Synergy.THROWER, 42, False),
-    'SKELETON_KING' : (5, Synergy.UNDEAD, Synergy.JUGGERNAUT, 45, True),
+    'SKELETON_GIANT' : Card(3, Synergy.UNDEAD, Synergy.BRAWLER, 48, True),
+    'ROYAL_GHOST' : Card(4, Synergy.UNDEAD, Synergy.ASSASSIN, 52, True),
+    'SKELETON_BOMBER' : Card(2, Synergy.UNDEAD, Synergy.BLASTER, 56, False),
+    'SKELETON_KING' : Card(5, Synergy.UNDEAD, Synergy.JUGGERNAUT, 60, True),
     
-    'MEGA_KNIGHT' : (4, Synergy.ACE, Synergy.BRAWLER, 48, True),
-    'EXECUTIONER' : (3, Synergy.ACE, Synergy.THROWER, 51, False),
-    'PEKKA' : (3, Synergy.ACE, Synergy.JUGGERNAUT, 54, True),
-    'BANDIT' : (4, Synergy.ACE, Synergy.AVENGER, 57, True)
+    'MEGA_KNIGHT' : Card(4, Synergy.ACE, Synergy.BRAWLER, 64, True),
+    'EXECUTIONER' : Card(3, Synergy.ACE, Synergy.BLASTER, 68, False),
+    'PEKKA' : Card(3, Synergy.ACE, Synergy.JUGGERNAUT, 72, True),
+    'BANDIT' : Card(4, Synergy.ACE, Synergy.AVENGER, 76, True),
+    
+    'ELECTRO_GIANT': Card(3, Synergy.ELECTRIC, Synergy.AVENGER, 80, True),
+    'ELECTRO_WIZARD': Card(4, Synergy.ELECTRIC, Synergy.MAGE, 84, False),
+    'WIZARD': Card(2, Synergy.FIRE, Synergy.MAGE, 88, False),
+    'BABY_DRAGON': Card(4, Synergy.FIRE, Synergy.BLASTER, 92, False),
+    
+    'WITCH': Card(4, Synergy.UNDEAD, Synergy.AVENGER, 96, False),
+    'SKELETON_DRAGON': Card(2, Synergy.UNDEAD, Synergy.RANGER, 100, False),
+    'MUSKETEER': Card(3, Synergy.NOBEL, Synergy.BLASTER, 104, False)
     }
-    #TODO: add new cards!
     
-    #map size
+    #consts
     ROWS = 5
     COLS = 5
-    
     HAND_SIZE = 3
+    N_SYNS = 14
+    N_CARDS = 108
     
-    #TODO: update
-    N_SYNS = 11
-    
-    #TODO: update
-    #number of cards (3 * each unique card -> maybe I should include 4stars?)
-    N_CARDS = 60
-    
-    #in play map
-    #reserve cards list
-    #cards in hand
-    
-    def __init__(self, starting_elixir, starting_card_info, starting_max_placement):
+    def __init__(self):
         #start from top -> (0,0) == top left
         self.map = [[0 for _ in range(self.ROWS)] for _ in range(self.COLS)]
-        self.elixir = starting_elixir
+        self.elixir = 0
+        #list of current cards 0 if not present, (row, col) if present
         self.current_cards = [0 for _ in range(self.N_CARDS)]
         self.hand = [0 for _ in range(self.HAND_SIZE)]
         #TODO: add starting card
-        self.max_placement = starting_max_placement
-        self.factions = [0 for _ in range(self.N_FACTIONS)]
+        self.max_placement = 3
         self.syns = [0 for _ in range(self.N_SYNS)]
         
-    def buy_card(self, card_posiiton):
+    def buy_card(self, card_posiiton: int) -> bool:
         card = self.hand[card_posiiton]
-        print("Buying: ",  card)
         
         if card.base_cost > self.elixir:
             print("Not enough elixir!")
-            return
+            return False
         
-        #check if it combines TODO:recursion?
-        if self.current_cards[card.base_index] != 0:
-            if self.current_cards[card.base_index + 1] != 0:
-                self.current_cards[card.base_index + 1] = 0
-                self.current_cards[card.baes_index + 2] = 1
-            else:
-                self.current_cards[card.base_index + 1] = 1
-            self.current_cards[card.base_index] = 0
-            print("Merged!")
+        return self.add_card(card)
+    
+    def sell_card(self, row: int, col: int) -> bool:
+        if (row < 0 or row >= self.ROWS or col < 0 or col >= self.COLS):
+            print("Not in bounds!")
+            return False
+        
+        if (self.map[row][col] == 0):
+            print("Nohting to sell!")
+            return False
+        
+        level_card = self.map[row][col]
+        self.current_cards[level_card.get_index()] = 0
+        self.map[row][col] = 0
+        print("Card sold!")
+        return True
+    
+    def move_card(self, oldrow: int, oldcol: int, newrow: int, newcol: int) -> bool:
+        if (oldrow < 0 or oldrow >= self.ROWS or oldcol < 0 or oldcol >= self.COLS or newrow < 0 or newrow >= self.ROWS or newcol < 0 or newcol >= self.COLS):
+            print("Not in bounds!")
+            return False
+        
+        #check if there is a card to move
+        if self.map[oldrow][oldcol] == 0:
+            print('No card to move!')
+            return False
+        
+        #check if moving from bench and moving to an open spot
+        if oldrow == self.ROWS - 1 and self.map[newrow][newcol] == 0:
+            if self.is_board_full():
+                print('Cannot move card!')
+                return False
+        
+        card_incoming = self.map[oldrow][oldcol]
+        card_leaving = self.map[newrow][newcol]
+        card_incoming.row = newrow
+        card_incoming.col = newcol
+        if (card_leaving != 0):
+            card_leaving.row = oldrow
+            card_leaving.col = oldcol
+        self.map[oldrow][oldcol] = card_leaving
+        self.map[newrow][newcol] = card_incoming
+        print('Card moved!')
+        return True
+    
+    def add_card(self, card: Card):
+        #check if it combines
+        if(self.merge(card)):
+            print("merged!")
+            return True
                     
         #check for space on the board or on the bench
+        if self.is_game_full():
+            print("Game is full!")
+            return False
+        
         card_location = (-1, -1)
-        n_cards_on_board = 0
-        for row in range(self.ROWS - 1):
-            for col in range(self.COLS):
-                if self.map[row][col] != 0:
-                    n_cards_on_board += 1
-                
-        if n_cards_on_board < self.max_placement:
+        if not self.is_board_full():
             if card.is_frontline:
                 for row in range(self.ROWS - 1):
                     if self.map[row][2] == 0:
@@ -136,7 +178,7 @@ class Merge:
                         card_location = (row, 5)
                         break
             else:
-                for row in range(self.ROWS - 1, -1, -1):
+                for row in range(self.ROWS - 2 , -1, -1):
                     if self.map[row][2] == 0:
                         card_location = (row, 2)
                         break
@@ -158,38 +200,102 @@ class Merge:
             for col in range(self.COLS):
                 if self.map[self.ROWS - 1][col] == 0:
                     card_location = (self.ROWS - 1, col)
+                    break
                     
+        #TODO: not needed
         #check if board if full
         if card_location == (-1, -1):
-            print("Board is full!")
-            return
+            print("Board is full! redundant")
+            return False
         
         #actually add the card
-        new_level_card = LeveledCard(card, 1)
-        self.current_cards[new_level_card.get_index()] = 1
-        self.map[card_posiiton[0]][card_posiiton[1]] = new_level_card
-        print("Card bought!")
-        return
+        new_level_card = LeveledCard(card, 1, card_location[0], card_location[1])
+        self.current_cards[new_level_card.get_index()] = new_level_card
+        self.map[new_level_card.row][new_level_card.col] = new_level_card
+        print("Card Added!")
+        return True
     
-    
-    def sell_card(self, row, col):
-        if (row < 0 or row >= self.ROWS or col < 0 or col >= self.COLS):
-            print("Not in bounds!")
-            return
+    def merge(self, card: Card) -> bool:
+        if self.current_cards[card.base_index] == 0:
+            return False #no merge
         
-        if (self.map[row][col] == 0):
-            print("Nohting to sell!")
-            return
+        highest_level_card = self.current_cards[card.base_index]
+        for i in range(card.base_index + 4):
+            if self.current_cards[i] != 0:
+                #get highest level card and remove all cards that are merging
+                highest_level_card = self.current_cards[i]
+                self.current_cards[i] = 0
+                self.map[highest_level_card.row][highest_level_card.col] = 0
+            else:
+                break
+            
+        #level card up and add it back to list and map
+        highest_level_card.level = highest_level_card.level + 1
+        self.current_cards[highest_level_card.get_index()] = highest_level_card
+        self.map[highest_level_card.row][highest_level_card.col] = highest_level_card
+        return True
+    
+    def is_board_full(self):
+        n_cards_on_board = 0
+        for row in range(self.ROWS - 1):
+            for col in range(self.COLS):
+                if self.map[row][col] != 0:
+                    n_cards_on_board += 1
+                    
+        return n_cards_on_board >= self.max_placement
+    
+    def is_bench_full(self):
+        for col in range(self.COLS):
+            if self.map[self.ROWS - 1][col] == 0:
+                return False
+            
+        return True
+    
+    def is_game_full(self):
+        return self.is_board_full() and self.is_bench_full()
+    
+    def update_hand(self, card1: string, card2: string, card3: string):
+        if card1 not in self.CARDS or card2 not in self.CARDS or card3 not in self.CARDS:
+            print('Card(s) not found!')
+            return False
         
-        level_card = self.map[row][col]
-        self.current_cards[level_card.get_index()] = 0
-        self.map[row][col] = 0
-        print("Card sold!")
-        return
+        self.hand[0] = self.CARDS[card1]
+        self.hand[1] = self.CARDS[card2]
+        self.hand[2] = self.CARDS[card3]
+        return True
     
-    def move_card(self, oldrow, oldcol, newrow, newcol):
-        return
+    def add_starting_card(self, card: string, level: int):
+        if card not in self.CARDS:
+            print('Card not found!')
+            return False
+        
+        level_card = LeveledCard(self.CARDS[card], level, -1, -1)
+        if level_card.card.is_frontline:
+            level_card.row = 0
+            level_card.col = 2
+            self.map[0][2] = level_card
+        else:
+            level_card.row = self.ROWS - 2
+            level_card.col = 2
+            self.map[self.ROWS - 2][2] = level_card
+        self.current_cards[level_card.get_index()] = level_card
+        return True
     
+    def print_map(self):
+        print('[')
+        for row in range(self.ROWS):
+            row_str = []
+            for col in range(self.COLS):
+                cell = self.map[row][col]
+                if cell == 0:  
+                    row_str.append(' 0')
+                else:
+                    row_str.append(f'{str(cell.card.synergy1)} {str(cell.card.synergy2)}')
+            print(' '.join(row_str))
+        print(']')
+        
+        
+        
     #for simplicity of game actions
     def move_to_front(self):
         return
@@ -198,6 +304,8 @@ class Merge:
     def move_to_bench(self):
         return
     def get_game_state(self):
+        return
+    def remove_card(self):
         return
     
         
