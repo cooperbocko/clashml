@@ -71,3 +71,4 @@ game.move_card(4, 0, 3, 1)
 
 #print(game.hand)
 game.print_map()
+print(game.syns)

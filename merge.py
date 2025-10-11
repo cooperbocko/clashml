@@ -1,9 +1,8 @@
 from dataclasses import dataclass
 from enum import Enum
 import string
-from tarfile import SYMTYPE
 
-@dataclass
+@dataclass(frozen=True)
 class Card:
     base_cost: int
     synergy1: int
@@ -81,18 +80,15 @@ class Merge:
     ROWS = 5
     COLS = 5
     HAND_SIZE = 3
-    N_SYNS = 14
-    N_CARDS = 108
+    N_SYNS = len(Synergy)
+    N_CARDS = len(CARDS) * 4
     
     def __init__(self):
-        #start from top -> (0,0) == top left
         self.map = [[0 for _ in range(self.ROWS)] for _ in range(self.COLS)]
         self.elixir = 0
-        #list of current cards 0 if not present, (row, col) if present
         self.current_cards = [0 for _ in range(self.N_CARDS)]
         self.hand = [0 for _ in range(self.HAND_SIZE)]
-        #TODO: add starting card
-        self.max_placement = 3
+        self.max_placement = 2
         self.syns = [0 for _ in range(self.N_SYNS)]
         
     def buy_card(self, card_posiiton: int) -> bool:
@@ -117,6 +113,7 @@ class Merge:
         self.current_cards[level_card.get_index()] = 0
         self.map[row][col] = 0
         print("Card sold!")
+        self.update_syns()
         return True
     
     def move_card(self, oldrow: int, oldcol: int, newrow: int, newcol: int) -> bool:
@@ -145,6 +142,7 @@ class Merge:
         self.map[oldrow][oldcol] = card_leaving
         self.map[newrow][newcol] = card_incoming
         print('Card moved!')
+        self.update_syns()
         return True
     
     def add_card(self, card: Card):
@@ -201,18 +199,13 @@ class Merge:
                 if self.map[self.ROWS - 1][col] == 0:
                     card_location = (self.ROWS - 1, col)
                     break
-                    
-        #TODO: not needed
-        #check if board if full
-        if card_location == (-1, -1):
-            print("Board is full! redundant")
-            return False
         
         #actually add the card
         new_level_card = LeveledCard(card, 1, card_location[0], card_location[1])
         self.current_cards[new_level_card.get_index()] = new_level_card
         self.map[new_level_card.row][new_level_card.col] = new_level_card
         print("Card Added!")
+        self.update_syns()
         return True
     
     def merge(self, card: Card) -> bool:
@@ -233,6 +226,7 @@ class Merge:
         highest_level_card.level = highest_level_card.level + 1
         self.current_cards[highest_level_card.get_index()] = highest_level_card
         self.map[highest_level_card.row][highest_level_card.col] = highest_level_card
+        self.update_syns()
         return True
     
     def is_board_full(self):
@@ -279,7 +273,22 @@ class Merge:
             level_card.col = 2
             self.map[self.ROWS - 2][2] = level_card
         self.current_cards[level_card.get_index()] = level_card
+        self.update_syns()
         return True
+    
+    #not the most optimal approach but much cleaner code wise
+    def update_syns(self):
+        self.syns = [0 for _ in range(self.N_SYNS)]
+        card_set = set()
+        for row in range(self.ROWS - 1):
+            for col in range(self.COLS):
+                if self.map[row][col] != 0:
+                    card_set.add(self.map[row][col].card)
+                    
+        for card in card_set:
+            self.syns[card.synergy1.value] += 1
+            self.syns[card.synergy2.value] += 1
+        return
     
     def print_map(self):
         print('[')
@@ -294,8 +303,6 @@ class Merge:
             print(' '.join(row_str))
         print(']')
         
-        
-        
     #for simplicity of game actions
     def move_to_front(self):
         return
@@ -305,7 +312,6 @@ class Merge:
         return
     def get_game_state(self):
         return
-    def remove_card(self):
-        return
+
     
         

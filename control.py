@@ -47,10 +47,9 @@ class Control:
 
 
 c = Control(0, 25, 549, 978)
-
+c.check_screen_bounds()
 #bluestacks coords: 0,25 - 549,978
 c.screenshot()
-c.click(265, 745)
-c.click(265, 745)
+
 
 #0,25 for apple top bar
