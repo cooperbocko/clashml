@@ -37,19 +37,21 @@ class Control:
         except KeyboardInterrupt:
             print("\nDone.")
             
-    def screenshot(self, filename="screenshot_pyautogui.png"):
+    def screenshot(self, filename="screenshot_pyautogui.png", path="~/Desktop/"):
         
-        output_path = os.path.expanduser(f"~/Desktop/{filename}")
+        output_path = os.path.expanduser(f"{path}{filename}")
         region = (self.tx, self.ty, self.bx, self.by - self.ty)
         screenshot = pyautogui.screenshot(region = region)
         screenshot.save(output_path)
         print(f"Screenshot saved to {output_path}")
 
 
-c = Control(0, 25, 549, 978)
-c.check_screen_bounds()
+c = Control(7, 70, 325, 760)
+#c.check_screen_bounds()
 #bluestacks coords: 0,25 - 549,978
 c.screenshot()
 
 
 #0,25 for apple top bar
+
+#iphone mirroring: 0, 70 - 325, 760
