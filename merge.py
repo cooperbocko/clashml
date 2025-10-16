@@ -40,6 +40,7 @@ class Synergy(Enum):
     FIRE = 13
 
 class Merge: 
+    #TODO: add method for recifying changes made from golden bubbles
     CARDS = {
     'KNIGHT' : Card(2, Synergy.NOBEL, Synergy.JUGGERNAUT, 0, True),
     'PRINCE' : Card(3, Synergy.NOBEL, Synergy.BRAWLER, 4, True),

@@ -20,5 +20,5 @@ for filename in os.listdir(screenshot_path):
     cv2.imwrite(f"{raw_path}{count}3.jpg", cropped_image_3)
     count += 1
     
-    #if os.path.exists(f"{screenshot_path}{filename}"):
-        #os.remove(f"{screenshot_path}{filename}")
+    if os.path.exists(f"{screenshot_path}{filename}"):
+        os.remove(f"{screenshot_path}{filename}")

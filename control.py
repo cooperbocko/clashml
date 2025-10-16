@@ -1,6 +1,8 @@
 import pyautogui
 import time
 import os
+from PIL import Image
+import matplotlib.pyplot as plt
 
 class Control:
     
@@ -38,20 +40,36 @@ class Control:
             print("\nDone.")
             
     def screenshot(self, filename="screenshot_pyautogui.png", path="~/Desktop/"):
-        
         output_path = os.path.expanduser(f"{path}{filename}")
-        region = (self.tx, self.ty, self.bx, self.by - self.ty)
+        region = (self.tx, self.ty, self.bx - self.tx, self.by - self.ty)
         screenshot = pyautogui.screenshot(region = region)
         screenshot.save(output_path)
         print(f"Screenshot saved to {output_path}")
-
-
-c = Control(7, 70, 325, 760)
+        return screenshot
+    
+    def get_cropped_images(self, screenshot, regions):
+        cropped_images = []
+        for region in regions:
+            crop = screenshot.crop(region)
+            cropped_images.append(crop)
+        return cropped_images
+        
+desktop = os.path.join(os.path.expanduser("~"), "Desktop")
+save_path = os.path.join(desktop, "screenshot.png")
+screenshot = pyautogui.screenshot(region = (315, 890, 50, 50))
+screenshot.save(save_path)
+#c = Control(7, 70, 325, 760)
 #c.check_screen_bounds()
 #bluestacks coords: 0,25 - 549,978
-c.screenshot()
+#c.screenshot()
 
+#screenshot = Image.open("screenshot_2025-10-13 21:26:03.139587.png")
 
+#top left 633 240    668 272
+#max_placement_img = c.get_cropped_images(screenshot, [(182, 272, 200, 295)])[0]
+#elixr_img = c.get_cropped_images(screenshot, [(230, 623, 282, 678)])[0]
+#plt.imshow(elixr_img)
+#plt.show()
 #0,25 for apple top bar
 
 #iphone mirroring: 0, 70 - 325, 760
