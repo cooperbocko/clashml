@@ -1,6 +1,5 @@
 import easyocr
 import cv2
-from PIL import Image
 
 class TextDetect:
     def __init__(self):
