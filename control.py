@@ -1,16 +1,18 @@
+from ast import Tuple
+from PIL import Image
 import pyautogui
 import time
 import os
 
 class Control:
     
-    def __init__(self, left, top, right, bottom):
+    def __init__(self, left: int, top: int, right: int, bottom: int):
         self.left = left
         self.top = top
         self.right = right
         self.bottom = bottom
         
-    def click(self, x, y):
+    def click(self, x: int, y: int):
         pyautogui.moveTo(self.left + x, self.top + y)
         pyautogui.click()
         
@@ -37,7 +39,7 @@ class Control:
         except KeyboardInterrupt:
             print("\nDone.")
             
-    def screenshot(self, filename="screenshot_pyautogui.png", path="~/Desktop/"):
+    def screenshot(self, filename: str="screenshot_pyautogui.png", path: str="~/Desktop/") -> Image:
         output_path = os.path.expanduser(f"{path}{filename}")
         region = (self.left, self.top, self.right - self.left, self.bottom - self.top)
         screenshot = pyautogui.screenshot(region = region)
@@ -45,7 +47,7 @@ class Control:
         print(f"Screenshot saved to {output_path}")
         return screenshot
     
-    def get_cropped_images(self, screenshot, regions):
+    def get_cropped_images(self, screenshot: Image, regions: Tuple[int, int, int, int]) -> list[Image]:
         cropped_images = []
         for region in regions:
             crop = screenshot.crop(region)

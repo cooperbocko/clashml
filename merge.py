@@ -1,6 +1,5 @@
 from dataclasses import dataclass
 from enum import Enum
-import string
 
 @dataclass(frozen=True)
 class Card:
@@ -146,7 +145,7 @@ class Merge:
         self.update_syns()
         return True
     
-    def add_card(self, card: Card):
+    def add_card(self, card: Card) -> bool:
         #check if it combines
         if(self.merge(card)):
             print("merged!")
@@ -230,7 +229,7 @@ class Merge:
         self.update_syns()
         return True
     
-    def is_board_full(self):
+    def is_board_full(self) -> bool:
         n_cards_on_board = 0
         for row in range(self.ROWS - 1):
             for col in range(self.COLS):
@@ -239,17 +238,17 @@ class Merge:
                     
         return n_cards_on_board >= self.max_placement
     
-    def is_bench_full(self):
+    def is_bench_full(self) -> bool:
         for col in range(self.COLS):
             if self.map[self.ROWS - 1][col] == 0:
                 return False
             
         return True
     
-    def is_game_full(self):
+    def is_game_full(self) -> bool:
         return self.is_board_full() and self.is_bench_full()
     
-    def update_hand(self, card1: string, card2: string, card3: string):
+    def update_hand(self, card1: str, card2: str, card3: str) -> bool:
         if card1 not in self.CARDS or card2 not in self.CARDS or card3 not in self.CARDS:
             print('Card(s) not found!')
             return False
@@ -259,7 +258,7 @@ class Merge:
         self.hand[2] = self.CARDS[card3]
         return True
     
-    def add_starting_card(self, card: string, level: int):
+    def add_starting_card(self, card: str, level: int) -> bool:
         if card not in self.CARDS:
             print('Card not found!')
             return False
@@ -278,7 +277,7 @@ class Merge:
         return True
     
     #not the most optimal approach but much cleaner code wise
-    def update_syns(self):
+    def update_syns(self) -> bool:
         self.syns = [0 for _ in range(self.N_SYNS)]
         card_set = set()
         for row in range(self.ROWS - 1):
@@ -289,7 +288,7 @@ class Merge:
         for card in card_set:
             self.syns[card.synergy1.value] += 1
             self.syns[card.synergy2.value] += 1
-        return
+        return True
     
     def print_map(self):
         print('[')
