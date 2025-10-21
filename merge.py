@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 from enum import Enum
+import numpy as np
 
 @dataclass(frozen=True)
 class Card:
@@ -15,6 +16,7 @@ class LeveledCard:
     level: int
     row: int
     col: int
+    hand_position: int = 0
     
     def get_cost(self):
         return (2 ** (self.level - 1)) * self.card.base_cost
@@ -87,12 +89,17 @@ class Merge:
         self.map = [[0 for _ in range(self.ROWS)] for _ in range(self.COLS)]
         self.elixir = 0
         self.current_cards = [0 for _ in range(self.N_CARDS)]
-        self.hand = [0 for _ in range(self.HAND_SIZE)]
+        self.hand = [0 for _ in range(int(self.N_CARDS / 4))] #TODO: is this the best way to do this
         self.max_placement = 2
         self.syns = [0 for _ in range(self.N_SYNS)]
         
     def buy_card(self, card_posiiton: int) -> bool:
-        card = self.hand[card_posiiton]
+        card = None
+        for hand_card in self.hand:
+            if hand_card != 0 and hand_card.hand_position == card_posiiton:
+                card = hand_card.card
+        if card == None:
+            print("Not a valid position")
         
         if card.base_cost > self.elixir:
             print("Not enough elixir!")
@@ -208,12 +215,13 @@ class Merge:
         self.update_syns()
         return True
     
+    #TODO: # star into 4 star merge when 4 star is present exception
     def merge(self, card: Card) -> bool:
         if self.current_cards[card.base_index] == 0:
             return False #no merge
         
         highest_level_card = self.current_cards[card.base_index]
-        for i in range(card.base_index + 4):
+        for i in range(card.base_index, card.base_index + 4):
             if self.current_cards[i] != 0:
                 #get highest level card and remove all cards that are merging
                 highest_level_card = self.current_cards[i]
@@ -228,6 +236,18 @@ class Merge:
         self.map[highest_level_card.row][highest_level_card.col] = highest_level_card
         self.update_syns()
         return True
+    
+    def get_state(self) -> np.array:
+        cards = np.array([1 if card != 0 else 0 for card in self.current_cards])
+        cards_positions = np.array([card.row * 5 + card.col + 1 if card != 0 else 0 for card in self.current_cards])
+        hand = np.array([1 if card != 0 else 0 for card in self.hand])
+        hand_positions = np.array([card.hand_position if card != 0 else 0 for card in self.hand])
+        #TODO: have synergies updated after every action?
+        synergies = np.array(self.syns)
+        elixir = np.array([self.elixir])
+        max_placement = np.array([self.max_placement])
+        state = np.concatenate([cards, cards_positions, hand, hand_positions, synergies, elixir, max_placement])
+        return state
     
     def is_board_full(self) -> bool:
         n_cards_on_board = 0
@@ -253,9 +273,13 @@ class Merge:
             print('Card(s) not found!')
             return False
         
-        self.hand[0] = self.CARDS[card1]
-        self.hand[1] = self.CARDS[card2]
-        self.hand[2] = self.CARDS[card3]
+        self.hand = [0 for _ in range(int(self.N_CARDS / 4))]
+        card_1 = LeveledCard(self.CARDS[card1], 1, -1, -1, 0)
+        card_2 = LeveledCard(self.CARDS[card2], 1, -1, -1, 1)
+        card_3 = LeveledCard(self.CARDS[card3], 1, -1, -1, 2)
+        self.hand[int(card_1.get_index() / 4)] = card_1
+        self.hand[int(card_2.get_index() / 4)] = card_2
+        self.hand[int(card_3.get_index() / 4)] = card_3
         return True
     
     def add_starting_card(self, card: str, level: int) -> bool:
@@ -309,8 +333,6 @@ class Merge:
     def move_to_back(self):
         return
     def move_to_bench(self):
-        return
-    def get_game_state(self):
         return
 
     

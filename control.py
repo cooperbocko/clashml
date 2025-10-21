@@ -3,6 +3,7 @@ from PIL import Image
 import pyautogui
 import time
 import os
+from typing import List, Tuple
 
 class Control:
     
@@ -13,7 +14,7 @@ class Control:
         self.bottom = bottom
         
     def click(self, x: int, y: int):
-        pyautogui.moveTo(self.left + x, self.top + y)
+        pyautogui.moveTo(x, y)
         pyautogui.click()
         
     def check_window_bounds(self):
@@ -34,7 +35,8 @@ class Control:
         try:
             while True:
                 x, y = pyautogui.position()
-                print(f"Mouse position: ({x}, {y})", end='\r')  # Overwrites the line
+                color = pyautogui.pixel(x, y)
+                print(f"Mouse position: ({x}, {y}) {color}", end='\r')  # Overwrites the line
                 time.sleep(0.5)
         except KeyboardInterrupt:
             print("\nDone.")
@@ -47,9 +49,11 @@ class Control:
         print(f"Screenshot saved to {output_path}")
         return screenshot
     
-    def get_cropped_images(self, screenshot: Image, regions: Tuple[int, int, int, int]) -> list[Image]:
+    def get_cropped_images(self, screenshot: Image, regions: List[Tuple[int, int, int, int]]) -> list[Image]:
         cropped_images = []
         for region in regions:
             crop = screenshot.crop(region)
             cropped_images.append(crop)
         return cropped_images
+
+#Control.check_screen_bounds()

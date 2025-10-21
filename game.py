@@ -1,3 +1,4 @@
+import pyautogui
 from merge import Merge
 from control import Control
 from card_matcher import CardMatch
@@ -5,9 +6,21 @@ from text_detect import TextDetect
 import numpy as np
 from ultralytics import YOLO
 import cv2
+import random
+import time
 
 class Game:
     #TODO: constans
+    NUM_HAND_SLOTS = 3
+    NUM_BOARD_SLOTS = 25
+
+    BUY_START = 0
+    SELL_START = BUY_START + NUM_HAND_SLOTS
+    MOVE_FRONT_START = SELL_START + NUM_BOARD_SLOTS
+    MOVE_BACK_START = MOVE_FRONT_START + NUM_BOARD_SLOTS
+    MOVE_BENCH_START = MOVE_BACK_START + NUM_BOARD_SLOTS
+    NO_ACTION = MOVE_BENCH_START + NUM_BOARD_SLOTS
+    TOTAL_ACTIONS = NO_ACTION + 1
     
     #screen bounds
     TOP = 68
@@ -29,53 +42,141 @@ class Game:
     PLACEMENT_REGION = [(202, 355, 254, 386)]
     
     #click points
+    BATTLE = (220, 786)
+    BOARD = [
+        [(120, 600), (175, 600), (225, 600), (280, 600), (330, 600)],
+        [(95, 640), (150, 565), (200, 565), (250, 565), (305, 565)],
+        [(120, 680), (175, 680), (225, 680), (280, 680), (330, 680)],
+        [(95, 720), (150, 720), (200, 720), (250, 720), (305, 720)],
+        [(75, 785), (125, 785), (180, 785), (235, 785), (283, 785)]
+    ]
     
     def __init__(self):
         self.merge = Merge()
         self.control = Control(self.LEFT, self.TOP, self.RIGHT, self.BOTTOM) #TODO: make config file give screen size/constatns
         self.card_match = CardMatch() #TODO: make config file give screen size/constatns
         self.text_detection = TextDetect()
-        self.digit_model = YOLO("models/clash_digits.pt")
+        self.digit_model = YOLO("models/clash_digits_11.pt")
         
     def play_game(self):
-        #TODO: Get max place
+        #TODO: click game button
+        self.control.click(self.BATTLE[0], self.BATTLE[1])
+        time.sleep(10)
         
-        return
+        #TODO: get starting card
+        #click 0,2
+        start1 = self.BOARD[0][2]
+        start2 = self.BOARD[3][2]
+        self.control.click(start1[0], start1[1])
+        time.sleep(2)
+        #check if card screen appears
+        color = pyautogui.pixel(275, 434)
+        print(color)
+        if color[0] != 45 or color[1] != 226 or color[2] != 77:
+            self.control.click(start2[0], start2[1])
+            time.sleep(2)
+            color = pyautogui.pixel(275, 434)
+            print(color)
+        start_screenshot = self.control.screenshot()
+        #else click 3,2
+        #screenshot
+        #get crops
+        start_card_image = self.control.get_cropped_images(start_screenshot, [(197, 143, 272, 237)])[0]
+        start_card = self.card_match.match(start_card_image)
+        print(start_card)
+        self.merge.add_starting_card(str.upper(start_card), 1) #TODO: upper
+        
+        #TODO: game loop
+        game_over = False
+        while not game_over:
+            #deploy phase
+            while True: #pixel check
+                self.play_step()
+                time.sleep(1)
+            
+            #transition
+            time.sleep(10)
+
+            #battle phase
+            while True: #pixel check
+                time.sleep(1)
+                
+            #TODO: detect game over
     
     def play_step(self):
         screenshot = self.control.screenshot()
         
-        #TODO: Get elixir
+        #TODO: Get elixir -> check back on results
         elixr_img = np.array(self.control.get_cropped_images(screenshot, self.ELIXR_REGION)[0])
         elixr_img = cv2.cvtColor(elixr_img, cv2.COLOR_RGBA2RGB)
-        cv2.imwrite("text.png", elixr_img)
-        elixr = self.digit_model.predict(source=elixr_img)
-        results = elixr[0]
-        boxes = results.boxes
-        
-        for box in boxes:
-            cls_id = int(box.cls[0])       # class index (0-9)
-            cls_name = results.names[cls_id]  # '0', '1', etc.
-            conf = float(box.conf[0])      # confidence score
-            x1, y1, x2, y2 = box.xyxy[0]  # bounding box coordinates
+        results = self.digit_model.predict(source=elixr_img)[0]
+        boxes = results.boxes.xyxy.cpu().numpy()
+        labels = [results.names[int(i)] for i in results.boxes.cls]
+        sorted_detections = sorted(zip(labels, boxes), key=lambda x: x[1][0])
+        digits = ''.join(label for label, _ in sorted_detections)
+        elixr = int(digits)
+        print("elixir: ", elixr)
+        self.merge.elixir = elixr
 
-            print(f"Detected {cls_name} with {conf:.2f} at [{x1:.1f}, {y1:.1f}, {x2:.1f}, {y2:.1f}]")
-
-        
         max_placement_img = np.array(self.control.get_cropped_images(screenshot, self.PLACEMENT_REGION)[0])
-        pl = self.text_detection.detect_text(max_placement_img)
-        print("max_placement: ", pl)
+        max_placement = self.text_detection.detect_text(max_placement_img)
+        max_placement = int(max_placement[len(max_placement) - 1]) #get last part of text
+        print("max_placement: ", max_placement)
+        self.merge.max_placement = max_placement
 
         #TODO: Get cards
         card_images = self.control.get_cropped_images(screenshot, self.CARD_REGIONS)
-        
         cards = []
         for image in card_images:
-            cards.append(self.card_match.match(image))
+            cards.append(str.upper(self.card_match.match(image))) #TODO: upper
         print(cards)
+        self.merge.update_hand(cards[0], cards[1], cards[2])
+        
+        #TODO: Get state
+        state = self.merge.get_state()
+        print(state)
         
         #TODO: Get agent move
+        action, position = self.decode_action(random.randint(0, 105))
+        row = int(position / 5)
+        col = position % 5
+        
+        #TODO: Execute move
+        if action == "buy":
+            self.merge.buy_card(position)
+            return
+        elif action == "sell":
+            self.merge.sell_card(row, col)
+            return
+        elif action == "move_to_front":
+            self.merge.move_to_front()
+            return
+        elif action == "move_to_back":
+            self.merge.move_to_back()
+            return
+        elif action == "move_to_bench":
+            self.merge.move_to_bench()
+            return
+        else:
+            print("doing nothing")
+            return
+        
+    def decode_action(self, action: int) -> tuple[str, int]:
+        if action < self.SELL_START:
+            return ("buy", action - self.BUY_START)
+        elif action < self.MOVE_FRONT_START:
+            return ("sell", action - self.SELL_START)
+        elif action < self.MOVE_BACK_START:
+            return ("move_to_front", action - self.MOVE_FRONT_START)
+        elif action < self.MOVE_BENCH_START:
+            return ("move_to_back", action - self.MOVE_BACK_START)
+        elif action < self.NO_ACTION:
+            return ("move_to_bench", action - self.MOVE_BENCH_START)
+        else:
+            return ("no_action", None)
+        
+        
     
 
 game = Game()
-game.play_step()
+game.play_game()

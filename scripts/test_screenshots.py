@@ -1,5 +1,5 @@
 import cv2
-from pyautogui import screenshot
+
 
 screenshot_path = "./"
 filename = "screenshot_pyautogui.png"
@@ -8,11 +8,11 @@ count = 1
 
 image = cv2.imread("scripts/screenshot_pyautogui.png")
     
-cropped_image_1 = image[782:874, 53:128]
-cropped_image_2 = image[782:874, 134:209]
-cropped_image_3 = image[782:874, 215:290]
-cropped_image_4 = image[822:872, 308:356]
-cropped_image_5 = image[355:386, 202:254]
+cropped_image_1 = image[143:237, 197:272]
+cropped_image_2 = image[160:175, 285:301]
+#cropped_image_3 = image[782:874, 215:290]
+#cropped_image_4 = image[822:872, 308:356]
+#cropped_image_5 = image[355:386, 202:254]
 
 #1 (53, 782, 128, 874)
 #2 (134, 782, 209, 874)
@@ -21,6 +21,6 @@ cropped_image_5 = image[355:386, 202:254]
 #palcement (202, 355, 254, 386)
 cv2.imwrite(f"{raw_path}{count}1.jpg", cropped_image_1)
 cv2.imwrite(f"{raw_path}{count}2.jpg", cropped_image_2)
-cv2.imwrite(f"{raw_path}{count}3.jpg", cropped_image_3)
-cv2.imwrite(f"{raw_path}{count}4.jpg", cropped_image_4)
-cv2.imwrite(f"{raw_path}{count}5.jpg", cropped_image_5)
+#cv2.imwrite(f"{raw_path}{count}3.jpg", cropped_image_3)
+#cv2.imwrite(f"{raw_path}{count}4.jpg", cropped_image_4)
+#cv2.imwrite(f"{raw_path}{count}5.jpg", cropped_image_5)

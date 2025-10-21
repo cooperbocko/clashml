@@ -1,4 +1,4 @@
-from ..control import Control
+from control import Control
 from datetime import datetime
 import time
 
@@ -28,4 +28,4 @@ def on_press():
         filename = f"screenshot_{datetime.now()}.png"
         c.screenshot(filename=filename, path='images/game_screenshots/')
         
-#c.screenshot()
+c.screenshot()
