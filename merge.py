@@ -100,6 +100,7 @@ class Merge:
                 card = hand_card.card
         if card == None:
             print("Not a valid position")
+            return False
         
         if card.base_cost > self.elixir:
             print("Not enough elixir!")

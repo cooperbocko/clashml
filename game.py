@@ -60,46 +60,65 @@ class Game:
         
     def play_game(self):
         #TODO: click game button
+        print('Starting game!')
         self.control.click(self.BATTLE[0], self.BATTLE[1])
         time.sleep(10)
         
         #TODO: get starting card
         #click 0,2
+        print('Getting Starting Card!')
         start1 = self.BOARD[0][2]
         start2 = self.BOARD[3][2]
         self.control.click(start1[0], start1[1])
-        time.sleep(2)
+        time.sleep(1)
         #check if card screen appears
-        color = pyautogui.pixel(275, 434)
+        color = pyautogui.pixel(416, 202)
         print(color)
-        if color[0] != 45 or color[1] != 226 or color[2] != 77:
+        time.sleep(2)
+        if color[0] not in range(58, 63) or color[1] not in range(54, 59) or color[2] not in range(79, 84):
             self.control.click(start2[0], start2[1])
-            time.sleep(2)
-            color = pyautogui.pixel(275, 434)
+            time.sleep(1)
+            color = pyautogui.pixel(416, 202)
             print(color)
+            time.sleep(2)
         start_screenshot = self.control.screenshot()
         #else click 3,2
         #screenshot
         #get crops
         start_card_image = self.control.get_cropped_images(start_screenshot, [(197, 143, 272, 237)])[0]
         start_card = self.card_match.match(start_card_image)
-        print(start_card)
         self.merge.add_starting_card(str.upper(start_card), 1) #TODO: upper
+        print('Added: ', start_card)
+        self.control.click(400, 950)
+        self.merge.print_map()
         
         #TODO: game loop
+        print('Entering game loop!')
         game_over = False
         while not game_over:
             #deploy phase
-            while True: #pixel check
+            print('Starting Deploy phase!')
+            while True: 
                 self.play_step()
-                time.sleep(1)
+                end = pyautogui.pixel(109, 963)
+                if end[0] == 22 and end[1] == 23 and end[2] == 41:
+                    break
+                self.merge.print_map()
+                time.sleep(3)
+                print('---------------------------------')
             
             #transition
             time.sleep(10)
 
             #battle phase
+            print('Battle Phase')
             while True: #pixel check
+                end = pyautogui.pixel(109, 963)
+                if end[0] == 22 and end[1] == 23 and end[2] == 41:
+                    break
                 time.sleep(1)
+                
+            time.sleep(5)
                 
             #TODO: detect game over
     
@@ -118,11 +137,16 @@ class Game:
         print("elixir: ", elixr)
         self.merge.elixir = elixr
 
+        #TODO: easy ocr is not cutting it
         max_placement_img = np.array(self.control.get_cropped_images(screenshot, self.PLACEMENT_REGION)[0])
         max_placement = self.text_detection.detect_text(max_placement_img)
-        max_placement = int(max_placement[len(max_placement) - 1]) #get last part of text
-        print("max_placement: ", max_placement)
-        self.merge.max_placement = max_placement
+        if len(max_placement) > 0:
+            max_placement = max_placement[0]
+        print('Full Text: ', max_placement)
+        if len(max_placement) > 0:
+            max_placement = int(max_placement[len(max_placement) - 1]) #get last part of text
+            print("max_placement: ", max_placement)
+        self.merge.max_placement = 3 #TODO:
 
         #TODO: Get cards
         card_images = self.control.get_cropped_images(screenshot, self.CARD_REGIONS)
@@ -134,19 +158,30 @@ class Game:
         
         #TODO: Get state
         state = self.merge.get_state()
-        print(state)
+        #print(state)
         
-        #TODO: Get agent move
-        action, position = self.decode_action(random.randint(0, 105))
+        #TODO: Get agent move 0 - 105
+        action, position = self.decode_action(random.randint(0, 4))
+        print(f"action: {action}, position: {position}")
         row = int(position / 5)
         col = position % 5
         
         #TODO: Execute move
         if action == "buy":
+            print("buying: ", position)
             self.merge.buy_card(position)
+            if position == 0:
+                self.control.click(100, 900)
+            elif position == 1:
+                self.control.click(175, 900)
+            else:
+                self.control.click(250, 900)
             return
         elif action == "sell":
+            print("selling: ", row, col)
             self.merge.sell_card(row, col)
+            spot = self.BOARD[row][col]
+            self.control.drag(spot[0], spot[1], 100, 900)
             return
         elif action == "move_to_front":
             self.merge.move_to_front()
@@ -176,7 +211,6 @@ class Game:
             return ("no_action", None)
         
         
-    
+g = Game()
+g.play_game()
 
-game = Game()
-game.play_game()

@@ -17,6 +17,12 @@ class Control:
         pyautogui.moveTo(x, y)
         pyautogui.click()
         
+    def drag(self, sx, sy, ex, ey):
+        pyautogui.moveTo(sx, sy)
+        pyautogui.mouseDown()
+        pyautogui.moveTo(ex, ey)
+        pyautogui.mouseUp()
+        
     def check_window_bounds(self):
         print("Move your mouse around. Press Ctrl+C to stop.")
 

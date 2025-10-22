@@ -11,3 +11,6 @@ images
 runs
 
 roboflow.py
+
+*.jpg
+*.png

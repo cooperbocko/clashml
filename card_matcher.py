@@ -72,10 +72,12 @@ class CardMatch:
         scores = {card: cosine_similarity([query_emb], [emb])[0][0] for card, emb in self.db.items()}
         best_card = max(scores, key=scores.get)
 
-        print("\n--- Match Results ---")
-        for card, score in sorted(scores.items(), key=lambda x: x[1], reverse=True):
-            print(f"{card:20s}: {score:.3f}")
+        #print("\n--- Match Results ---")
+        #for card, score in sorted(scores.items(), key=lambda x: x[1], reverse=True):
+        #    print(f"{card:20s}: {score:.3f}")
 
         print(f"\n✅ Best match: {best_card}")
         return best_card
     
+#c = CardMatch()
+#c.create_card_db()
