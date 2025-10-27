@@ -41,7 +41,7 @@ class Control:
         try:
             while True:
                 x, y = pyautogui.position()
-                color = pyautogui.pixel(x, y)
+                color = pyautogui.pixel(x * 2, y * 2)
                 print(f"Mouse position: ({x}, {y}) {color}", end='\r')  # Overwrites the line
                 time.sleep(0.5)
         except KeyboardInterrupt:
@@ -52,13 +52,22 @@ class Control:
         region = (self.left, self.top, self.right - self.left, self.bottom - self.top)
         screenshot = pyautogui.screenshot(region = region)
         screenshot.save(output_path)
-        print(f"Screenshot saved to {output_path}")
+        #print(f"Screenshot saved to {output_path}")
         return screenshot
     
     def get_cropped_images(self, screenshot: Image, regions: List[Tuple[int, int, int, int]]) -> list[Image]:
         cropped_images = []
         for region in regions:
             crop = screenshot.crop(region)
+
+            # Always convert to RGB (flatten transparency correctly if RGBA)
+            if crop.mode == "RGBA":
+                background = Image.new("RGB", crop.size, (0, 0, 0))
+                background.paste(crop, mask=crop.split()[3])  # apply alpha as mask
+                crop = background
+            else:
+                crop = crop.convert("RGB")
+
             cropped_images.append(crop)
         return cropped_images
 

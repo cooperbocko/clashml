@@ -2,11 +2,12 @@ from control import Control
 from datetime import datetime
 import time
 
-
+CARD_PICTURE_REGION = [(197, 143, 272, 237)]
 c = Control(8, 68, 423, 966)
 elixr = Control(315, 890, 365, 940)
 timez = Control(350, 220, 390, 270)
 place = Control(175, 400, 275, 475)
+card_picture = Control(197 + 8, 143 + 68, 272 + 8, 237 + 68)
 
 def constant():
     count = 0
@@ -28,4 +29,4 @@ def on_press():
         filename = f"screenshot_{datetime.now()}.png"
         c.screenshot(filename=filename, path='images/game_screenshots/')
         
-c.screenshot()
+card_picture.screenshot()

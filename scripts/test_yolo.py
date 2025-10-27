@@ -8,7 +8,7 @@ import numpy as np
 # CONFIG
 # ----------------------------
 MODEL_PATH = "models/clash_digits_11.pt"        # path to your trained YOLO model
-TEST_IMAGES_DIR = "clash_digit_detection/test/images"  # folder with test images
+TEST_IMAGES_DIR = "scripts"  # folder with test images
 OUTPUT_DIR = "runs/detect/test_results"      # folder to save annotated images
 os.makedirs(OUTPUT_DIR, exist_ok=True)
 

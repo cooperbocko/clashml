@@ -1,6 +1,8 @@
 import easyocr
 import cv2
 from PIL import Image
+import warnings
+warnings.filterwarnings("ignore", message=".*pin_memory.*")
 
 class TextDetect:
     def __init__(self):

@@ -9,6 +9,7 @@
 models
 images
 runs
+logs
 
 roboflow.py
 
