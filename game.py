@@ -48,10 +48,15 @@ class Game:
     BATTLE = (220, 786)
     BOARD = [
         [(120, 600), (175, 600), (225, 600), (280, 600), (330, 600)],
-        [(95, 640), (150, 565), (200, 565), (250, 565), (305, 565)],
+        [(95, 640), (150, 640), (200, 640), (250, 640), (305, 640)],
         [(120, 680), (175, 680), (225, 680), (280, 680), (330, 680)],
         [(95, 720), (150, 720), (200, 720), (250, 720), (305, 720)],
         [(75, 785), (125, 785), (180, 785), (235, 785), (283, 785)]
+    ]
+    HAND = [
+        (100, 900),
+        (175, 900),
+        (250, 900)
     ]
     CARD_PRESENT = (416, 202)
     CARD_PRESENT_COLORS = [31, 31, 53] #60, 56, 81
@@ -69,24 +74,24 @@ class Game:
     def play_game(self):
         #TODO: click game button
         print('Starting game!\n')
-        self.control.click(self.BATTLE[0], self.BATTLE[1])
+        self.control.click(self.BATTLE)
         time.sleep(10)
         
         #TODO: get starting card
         print('Getting Starting Card!')
         start1 = self.BOARD[0][2]
         start2 = self.BOARD[3][2]
-        self.control.click(start1[0], start1[1])
+        self.control.click(start1)
         start_card_image = pyautogui.screenshot(region=(self.CARD_PICTURE_REGION[0][0] + self.LEFT, self.CARD_PICTURE_REGION[0][1] + self.TOP, (self.CARD_PICTURE_REGION[0][2] - self.CARD_PICTURE_REGION[0][0]), (self.CARD_PICTURE_REGION[0][3] - self.CARD_PICTURE_REGION[0][1])))
         start_card = self.card_match.match(start_card_image)
         if (start_card == 'no_card'):
-            self.control.click(start2[0], start2[1])
+            self.control.click(start2)
             start_card_image = pyautogui.screenshot(region=(self.CARD_PICTURE_REGION[0][0] + self.LEFT, self.CARD_PICTURE_REGION[0][1] + self.TOP, (self.CARD_PICTURE_REGION[0][2] - self.CARD_PICTURE_REGION[0][0]), (self.CARD_PICTURE_REGION[0][3] - self.CARD_PICTURE_REGION[0][1])))
             start_card = self.card_match.match(start_card_image)
         self.merge.add_starting_card(str.upper(start_card), 1)
         print('Added: ', start_card)
         print('')
-        self.control.click(self.SAFE_CLICK[0], self.SAFE_CLICK[1])
+        self.control.click(self.SAFE_CLICK)
         self.merge.print_map()
         
         #TODO: game loop
@@ -179,17 +184,17 @@ class Game:
             print("buying: ", position)
             self.merge.buy_card(position)
             if position == 0:
-                self.control.click(100, 900)
+                self.control.click(self.HAND[0])
             elif position == 1:
-                self.control.click(175, 900)
+                self.control.click(self.HAND[1])
             else:
-                self.control.click(250, 900)
+                self.control.click(self.HAND[2])
             return
         elif action == "sell":
             print("selling: ", row, col)
             self.merge.sell_card(row, col)
             spot = self.BOARD[row][col]
-            self.control.drag(spot[0], spot[1], 100, 900)
+            self.control.drag(spot, self.HAND[0])
             return
         elif action == "move_to_front":
             self.merge.move_to_front()
