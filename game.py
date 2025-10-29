@@ -108,6 +108,7 @@ class Game:
                 move += 1
                 print(f'----------Move {move}-----------------------\n')
                 self.play_step(game_round, move)
+                #TODO: only for mac laptop display do you have to multiply by 2
                 end = pyautogui.pixel(self.END_BAR[0] * 2, self.END_BAR[1] * 2)
                 if end[0] <= self.END_COLOR[0] + 20 and end[1] <= self.END_COLOR[1] + 20 and end[2] <= self.END_COLOR[2] + 20:
                     break
@@ -174,10 +175,11 @@ class Game:
         #print(state)
         
         #TODO: Get agent move 0 - 105
-        action, position = self.decode_action(random.randint(0, 3))
+        action, position = self.decode_action(random.randint(0, 104))
         print(f"action: {action}, position: {position}")
         row = int(position / 5)
         col = position % 5
+        fpoint = self.BOARD[row][col]
         
         #TODO: Execute move
         if action == "buy":
@@ -193,23 +195,25 @@ class Game:
         elif action == "sell":
             print("selling: ", row, col)
             self.merge.sell_card(row, col)
-            spot = self.BOARD[row][col]
-            self.control.drag(spot, self.HAND[0])
+            self.control.drag(fpoint, self.HAND[0])
             return
         elif action == "move_to_front":
             print(f"Moving: {row}{col} to the front!")
             _, r, c = self.merge.move_to_front(row, col)
-            self.control.drag((row, col), (r, c))
+            tpoint = self.BOARD[r][c]
+            self.control.drag(fpoint, tpoint)
             return
         elif action == "move_to_back":
             print(f"Moving: {row}{col} to the back!")
             _, r, c = self.merge.move_to_back(row, col)
-            self.control.drag((row, col), (r, c))
+            tpoint = self.BOARD[r][c]
+            self.control.drag(fpoint, tpoint)
             return
         elif action == "move_to_bench":
             print(f"Moving: {row}{col} to the bench!")
             _, r, c = self.merge.move_to_bench(row, col)
-            self.control.drag((row, col), (r, c))
+            tpoint = self.BOARD[r][c]
+            self.control.drag(fpoint, tpoint)
             return
         else:
             print("doing nothing")

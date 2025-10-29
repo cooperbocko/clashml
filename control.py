@@ -71,7 +71,8 @@ class Control:
             print("\nDone.")
 
 #Control.check_screen_bounds()
-c = Control(0,0,0,0)
+#c = Control(0,0,0,0)
+'''
 SAFE_CLICK = (400, 950)
 BOARD = [
         [(120, 600), (175, 600), (225, 600), (280, 600), (330, 600)],
@@ -88,3 +89,4 @@ HAND = [
 spot = BOARD[3][4]
 c.click(point=SAFE_CLICK)
 c.drag(spot, BOARD[4][4])
+'''
