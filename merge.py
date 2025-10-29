@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 from enum import Enum
+from typing import Tuple
 import numpy as np
 
 @dataclass(frozen=True)
@@ -244,6 +245,7 @@ class Merge:
         hand = np.array([1 if card != 0 else 0 for card in self.hand])
         hand_positions = np.array([card.hand_position if card != 0 else 0 for card in self.hand])
         #TODO: have synergies updated after every action?
+        self.update_syns()
         synergies = np.array(self.syns)
         elixir = np.array([self.elixir])
         max_placement = np.array([self.max_placement])
@@ -329,12 +331,38 @@ class Merge:
         print(']')
         
     #for simplicity of game actions
-    def move_to_front(self):
-        return
-    def move_to_back(self):
-        return
-    def move_to_bench(self):
-        return
+    def move_to_front(self, row: int, col: int) -> Tuple[bool, int, int]:
+        #find first open spot, if nothing is open just replace the first slot
+        r, c = 0, 0
+        for col in range(self.COLS):
+            if self.map[r][col] == 0:
+                c = col
+                break
+        
+        b = self.move_card(row, col, r, c)
+        return (b, r, c)
+    
+    def move_to_back(self, row: int, col: int) -> Tuple[bool, int, int]:
+        #find first open spot, if nothing is open just replace the first slot
+        r, c = self.ROWS-2, 0
+        for col in range(self.COLS):
+            if self.map[r][col] == 0:
+                c = col
+                break
+        
+        b = self.move_card(row, col, r, c)
+        return (b, r, c)
+    
+    def move_to_bench(self, row: int, col: int) -> Tuple[bool, int, int]:
+        #find first open spot, if nothing is open just replace the first slot
+        r, c = self.ROWS-1, 0
+        for col in range(self.COLS):
+            if self.map[r][col] == 0:
+                c = col
+                break
+        
+        b = self.move_card(row, col, r, c)
+        return (b, r, c)
 
     
         

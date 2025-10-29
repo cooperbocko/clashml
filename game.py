@@ -197,13 +197,19 @@ class Game:
             self.control.drag(spot, self.HAND[0])
             return
         elif action == "move_to_front":
-            self.merge.move_to_front()
+            print(f"Moving: {row}{col} to the front!")
+            _, r, c = self.merge.move_to_front(row, col)
+            self.control.drag((row, col), (r, c))
             return
         elif action == "move_to_back":
-            self.merge.move_to_back()
+            print(f"Moving: {row}{col} to the back!")
+            _, r, c = self.merge.move_to_back(row, col)
+            self.control.drag((row, col), (r, c))
             return
         elif action == "move_to_bench":
-            self.merge.move_to_bench()
+            print(f"Moving: {row}{col} to the bench!")
+            _, r, c = self.merge.move_to_bench(row, col)
+            self.control.drag((row, col), (r, c))
             return
         else:
             print("doing nothing")
