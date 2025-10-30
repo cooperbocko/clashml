@@ -285,7 +285,7 @@ class Merge:
         self.hand[int(card_3.get_index() / 4)] = card_3
         return True
     
-    def add_starting_card(self, card: str, level: int) -> bool:
+    def add_card(self, card: str, level: int) -> bool:
         if card not in self.CARDS:
             print('Card not found!')
             return False

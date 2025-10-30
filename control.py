@@ -30,6 +30,14 @@ class Control:
         screenshot.save(output_path)
         return screenshot
     
+    def check_pixel(self, point: Tuple[int, int], is_mac_laptop_screen:bool = False) -> Tuple[int, int, int]:
+        x, y = point
+        if is_mac_laptop_screen:
+            x = x * 2
+            y = y * 2
+        
+        return pyautogui.pixel(x, y)
+    
     def get_cropped_images(self, screenshot: Image, regions: List[Tuple[int, int, int, int]]) -> list[Image]:
         cropped_images = []
         for region in regions:
