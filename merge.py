@@ -285,7 +285,23 @@ class Merge:
         self.hand[int(card_3.get_index() / 4)] = card_3
         return True
     
-    def add_card(self, card: str, level: int) -> bool:
+    def add_card(self, card: str, level: int, row: int, col: int) -> bool:
+        if card not in self.CARDS:
+            print('Card not found!')
+            return False
+        
+        if row not in range(0, self.ROWS) or col not in range(0, self.COLS):
+            print('Location not in board range!')
+            return False
+        
+        level_card = LeveledCard(self.CARDS[card], level, row, col)
+        self.map[row][col] = level_card
+        self.current_cards[level_card.get_index()] = level_card
+        self.update_syns
+        return True
+        
+    
+    def add_starting_card(self, card: str, level: int) -> bool:
         if card not in self.CARDS:
             print('Card not found!')
             return False

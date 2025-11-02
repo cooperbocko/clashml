@@ -1,3 +1,4 @@
+from turtle import left
 import pyautogui
 from merge import Merge
 from control import Control
@@ -75,7 +76,7 @@ class Game:
         self.level_match = ImageMatch("level_match_db.npz", "images/levels")
         self.text_detection = TextDetect()
         self.digit_model = YOLO("models/clash_digits_11.pt")
-        self.gold_detection = YOLO()
+        self.gold_detection = YOLO("models/gold_circle_11.pt")
         
     def play_game(self):
         #TODO: click game button
@@ -94,7 +95,7 @@ class Game:
             self.control.click(start2)
             start_card_image = pyautogui.screenshot(region=(self.CARD_PICTURE_REGION[0][0] + self.LEFT, self.CARD_PICTURE_REGION[0][1] + self.TOP, (self.CARD_PICTURE_REGION[0][2] - self.CARD_PICTURE_REGION[0][0]), (self.CARD_PICTURE_REGION[0][3] - self.CARD_PICTURE_REGION[0][1])))
             start_card = self.card_match.match(start_card_image)
-        self.merge.add_card(str.upper(start_card), 1)
+        self.merge.add_starting_card(str.upper(start_card), 1)
         print('Added: ', start_card)
         print('')
         self.control.click(self.SAFE_CLICK)
@@ -122,7 +123,7 @@ class Game:
                 
                 print('current map:')
                 self.merge.print_map()
-                time.sleep(3)
+                time.sleep(5)
             
             #transition
             time.sleep(10)
@@ -145,6 +146,21 @@ class Game:
     def play_step(self, n_round, n_move):
         screenshot = self.control.screenshot(filename=f"{n_round}{n_move}screenshot.png", path="logs/")
         
+        #Check for golden circles
+        gold_results = self.gold_detection.predict(source=screenshot, verbose=False)[0]
+        if len(gold_results.boxes) > 0:
+            print('Detected gold circle(s)!')
+            for box in gold_results.boxes.xyxy.cpu().numpy():
+                x1, y1, x2, y2 = box.astype(int)
+                x = int((x1 + x2)/2)
+                y = int((y1 + y2)/2)
+                point = (self.LEFT + x, self.TOP + y)
+                print(f'Clicking: x:{x} y:{y}')
+                self.control.click(point)
+                time.sleep(3)
+                #self.recheck_board()
+        
+        return
         #TODO: Get elixir -> check back on results and do error checking
         elixr_img = self.control.get_cropped_images(screenshot, self.ELIXR_REGION)[0]
         elixr_img.save(f"logs/{n_round}{n_move}elixr.png")
@@ -257,7 +273,7 @@ class Game:
                         continue
                     else:
                         #add new card
-                        self.merge.add_card(str.upper(card), level)
+                        self.merge.add_card(str.upper(card), level, row, col)
                         return True
                 else:
                     if prev.level == level:

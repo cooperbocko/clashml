@@ -25,7 +25,7 @@ class ImageMatch:
             print('No card db!')
             return
         
-        query_emb = self.get_card_embedding(image)
+        query_emb = self.get_embedding(image)
 
         scores = {card: cosine_similarity([query_emb], [emb])[0][0] for card, emb in self.db.items()}
         best = max(scores, key=scores.get)
