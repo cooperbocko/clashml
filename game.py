@@ -1,9 +1,10 @@
+from turtle import left
 import pyautogui
-from sympy import false
 from merge import Merge
 from control import Control
 from card_matcher import CardMatch
 from text_detect import TextDetect
+from image_match import ImageMatch
 from PIL import Image
 import numpy as np
 from ultralytics import YOLO
@@ -13,6 +14,9 @@ import time
 import matplotlib.pyplot as plt
 
 class Game:
+    #system settings
+    IS_MAC_LAPTOP_SCREEN = True
+    
     #TODO: constans
     NUM_HAND_SLOTS = 3
     NUM_BOARD_SLOTS = 25
@@ -41,8 +45,9 @@ class Game:
     ELIXR_REGION = [(308, 822, 356, 872)]
     
     #placement region
-    PLACEMENT_REGION = [(202, 355, 254, 386)]
-    CARD_PICTURE_REGION = [(197, 143, 272, 237)]
+    PLACEMENT_REGION = [(202, 355, 254, 386)] #crop
+    CARD_PICTURE_REGION = [(197, 143, 272, 237)] #crop
+    CARD_LEVEL_REGION = [(291, 225, 310, 243)] #screen shot
     
     #click points
     BATTLE = (220, 786)
@@ -68,8 +73,10 @@ class Game:
         self.merge = Merge()
         self.control = Control(self.LEFT, self.TOP, self.RIGHT, self.BOTTOM) #TODO: make config file give screen size/constatns
         self.card_match = CardMatch() #TODO: make config file give screen size/constatns
+        self.level_match = ImageMatch("level_match_db.npz", "images/levels")
         self.text_detection = TextDetect()
         self.digit_model = YOLO("models/clash_digits_11.pt")
+        self.gold_detection = YOLO("models/gold_circle_11.pt")
         
     def play_game(self):
         #TODO: click game button
@@ -102,6 +109,7 @@ class Game:
             game_round += 1
             print(f'----------Round {game_round}-----------------------\n')
             #deploy phase
+            #TODO: check for golden circles
             print('Starting Deploy phase!')
             move = 0
             while True: 
@@ -109,13 +117,13 @@ class Game:
                 print(f'----------Move {move}-----------------------\n')
                 self.play_step(game_round, move)
                 #TODO: only for mac laptop display do you have to multiply by 2
-                end = pyautogui.pixel(self.END_BAR[0] * 2, self.END_BAR[1] * 2)
+                end = self.control.check_pixel(self.END_BAR, self.IS_MAC_LAPTOP_SCREEN)
                 if end[0] <= self.END_COLOR[0] + 20 and end[1] <= self.END_COLOR[1] + 20 and end[2] <= self.END_COLOR[2] + 20:
                     break
                 
                 print('current map:')
                 self.merge.print_map()
-                time.sleep(3)
+                time.sleep(5)
             
             #transition
             time.sleep(10)
@@ -123,7 +131,9 @@ class Game:
             #battle phase
             print('Battle Phase')
             while True: #pixel check
-                end = pyautogui.pixel(self.END_BAR[0] * 2, self.END_BAR[1] * 2)
+                #TODO: only for mac laptop display do you have to multiply by 2
+                #end = pyautogui.pixel(self.END_BAR[0] * 2, self.END_BAR[1] * 2)
+                end = self.control.check_pixel(self.END_BAR, self.IS_MAC_LAPTOP_SCREEN)
                 print('end: ', end)
                 if end[0] <= self.END_COLOR[0] + 20 and end[1] <= self.END_COLOR[1] + 20 and end[2] <= self.END_COLOR[2] + 20:
                     break
@@ -136,6 +146,21 @@ class Game:
     def play_step(self, n_round, n_move):
         screenshot = self.control.screenshot(filename=f"{n_round}{n_move}screenshot.png", path="logs/")
         
+        #Check for golden circles
+        gold_results = self.gold_detection.predict(source=screenshot, verbose=False)[0]
+        if len(gold_results.boxes) > 0:
+            print('Detected gold circle(s)!')
+            for box in gold_results.boxes.xyxy.cpu().numpy():
+                x1, y1, x2, y2 = box.astype(int)
+                x = int((x1 + x2)/2)
+                y = int((y1 + y2)/2)
+                point = (self.LEFT + x, self.TOP + y)
+                print(f'Clicking: x:{x} y:{y}')
+                self.control.click(point)
+                time.sleep(3)
+                #self.recheck_board()
+        
+        return
         #TODO: Get elixir -> check back on results and do error checking
         elixr_img = self.control.get_cropped_images(screenshot, self.ELIXR_REGION)[0]
         elixr_img.save(f"logs/{n_round}{n_move}elixr.png")
@@ -233,7 +258,36 @@ class Game:
         else:
             return ("no_action", None)
         
+    def recheck_board(self) -> bool:
+        for row in range(self.merge.ROWS):
+            for col in range(self.merge.COLS):
+                prev = self.merge.map[row][col]
+                self.control.click(self.BOARD[row][col])
+                card_image = pyautogui.screenshot(region=(self.CARD_PICTURE_REGION[0][0] + self.LEFT, self.CARD_PICTURE_REGION[0][1] + self.TOP, (self.CARD_PICTURE_REGION[0][2] - self.CARD_PICTURE_REGION[0][0]), (self.CARD_PICTURE_REGION[0][3] - self.CARD_PICTURE_REGION[0][1])))
+                card = self.card_match.match(card_image)
+                level_image = pyautogui.screenshot(region=(self.CARD_LEVEL_REGION[0][0], self.CARD_LEVEL_REGION[0][1], self.CARD_LEVEL_REGION[0][2] - self.CARD_LEVEL_REGION[0][0], self.CARD_LEVEL_REGION[0][3] - self.CARD_LEVEL_REGION[0][1]))
+                level = self.level_match.match(level_image)
+                if prev == 0:
+                    if card == 'no_card':
+                        #do nothing
+                        continue
+                    else:
+                        #add new card
+                        self.merge.add_card(str.upper(card), level, row, col)
+                        return True
+                else:
+                    if prev.level == level:
+                        #do nothing
+                        continue
+                    else:
+                        #change level TODO: make sure this reference actually changes the object
+                        prev.level = level
+                        return True
+        
+        return False
+
+                    
+        
         
 g = Game()
 g.play_game()
-
