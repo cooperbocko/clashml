@@ -76,7 +76,7 @@ class CardMatch:
         #for card, score in sorted(scores.items(), key=lambda x: x[1], reverse=True):
         #    print(f"{card:20s}: {score:.3f}")
 
-        print(f"✅ Best match: {best_card}")
+        print(f"\n✅ Best match: {best_card}")
         return best_card
     
 #c = CardMatch()

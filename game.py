@@ -1,9 +1,10 @@
+from turtle import left
 import pyautogui
-from sympy import false
 from merge import Merge
 from control import Control
 from card_matcher import CardMatch
 from text_detect import TextDetect
+from image_match import ImageMatch
 from PIL import Image
 import numpy as np
 from ultralytics import YOLO
@@ -13,6 +14,9 @@ import time
 import matplotlib.pyplot as plt
 
 class Game:
+    #system settings
+    IS_MAC_LAPTOP_SCREEN = True
+    
     #TODO: constans
     NUM_HAND_SLOTS = 3
     NUM_BOARD_SLOTS = 25
@@ -41,17 +45,23 @@ class Game:
     ELIXR_REGION = [(308, 822, 356, 872)]
     
     #placement region
-    PLACEMENT_REGION = [(202, 355, 254, 386)]
-    CARD_PICTURE_REGION = [(197, 143, 272, 237)]
+    PLACEMENT_REGION = [(202, 355, 254, 386)] #crop
+    CARD_PICTURE_REGION = [(197, 143, 272, 237)] #crop
+    CARD_LEVEL_REGION = [(291, 225, 310, 243)] #screen shot
     
     #click points
     BATTLE = (220, 786)
     BOARD = [
         [(120, 600), (175, 600), (225, 600), (280, 600), (330, 600)],
-        [(95, 640), (150, 565), (200, 565), (250, 565), (305, 565)],
+        [(95, 640), (150, 640), (200, 640), (250, 640), (305, 640)],
         [(120, 680), (175, 680), (225, 680), (280, 680), (330, 680)],
         [(95, 720), (150, 720), (200, 720), (250, 720), (305, 720)],
         [(75, 785), (125, 785), (180, 785), (235, 785), (283, 785)]
+    ]
+    HAND = [
+        (100, 900),
+        (175, 900),
+        (250, 900)
     ]
     CARD_PRESENT = (416, 202)
     CARD_PRESENT_COLORS = [31, 31, 53] #60, 56, 81
@@ -63,30 +73,32 @@ class Game:
         self.merge = Merge()
         self.control = Control(self.LEFT, self.TOP, self.RIGHT, self.BOTTOM) #TODO: make config file give screen size/constatns
         self.card_match = CardMatch() #TODO: make config file give screen size/constatns
+        self.level_match = ImageMatch("level_match_db.npz", "images/levels")
         self.text_detection = TextDetect()
         self.digit_model = YOLO("models/clash_digits_11.pt")
+        self.gold_detection = YOLO("models/gold_circle_11.pt")
         
     def play_game(self):
         #TODO: click game button
         print('Starting game!\n')
-        self.control.click(self.BATTLE[0], self.BATTLE[1])
+        self.control.click(self.BATTLE)
         time.sleep(10)
         
         #TODO: get starting card
         print('Getting Starting Card!')
         start1 = self.BOARD[0][2]
         start2 = self.BOARD[3][2]
-        self.control.click(start1[0], start1[1])
+        self.control.click(start1)
         start_card_image = pyautogui.screenshot(region=(self.CARD_PICTURE_REGION[0][0] + self.LEFT, self.CARD_PICTURE_REGION[0][1] + self.TOP, (self.CARD_PICTURE_REGION[0][2] - self.CARD_PICTURE_REGION[0][0]), (self.CARD_PICTURE_REGION[0][3] - self.CARD_PICTURE_REGION[0][1])))
         start_card = self.card_match.match(start_card_image)
         if (start_card == 'no_card'):
-            self.control.click(start2[0], start2[1])
+            self.control.click(start2)
             start_card_image = pyautogui.screenshot(region=(self.CARD_PICTURE_REGION[0][0] + self.LEFT, self.CARD_PICTURE_REGION[0][1] + self.TOP, (self.CARD_PICTURE_REGION[0][2] - self.CARD_PICTURE_REGION[0][0]), (self.CARD_PICTURE_REGION[0][3] - self.CARD_PICTURE_REGION[0][1])))
             start_card = self.card_match.match(start_card_image)
         self.merge.add_starting_card(str.upper(start_card), 1)
         print('Added: ', start_card)
         print('')
-        self.control.click(self.SAFE_CLICK[0], self.SAFE_CLICK[1])
+        self.control.click(self.SAFE_CLICK)
         self.merge.print_map()
         
         #TODO: game loop
@@ -97,19 +109,21 @@ class Game:
             game_round += 1
             print(f'----------Round {game_round}-----------------------\n')
             #deploy phase
+            #TODO: check for golden circles
             print('Starting Deploy phase!')
             move = 0
             while True: 
                 move += 1
                 print(f'----------Move {move}-----------------------\n')
                 self.play_step(game_round, move)
-                end = pyautogui.pixel(self.END_BAR[0] * 2, self.END_BAR[1] * 2)
+                #TODO: only for mac laptop display do you have to multiply by 2
+                end = self.control.check_pixel(self.END_BAR, self.IS_MAC_LAPTOP_SCREEN)
                 if end[0] <= self.END_COLOR[0] + 20 and end[1] <= self.END_COLOR[1] + 20 and end[2] <= self.END_COLOR[2] + 20:
                     break
                 
                 print('current map:')
                 self.merge.print_map()
-                time.sleep(3)
+                time.sleep(5)
             
             #transition
             time.sleep(10)
@@ -117,7 +131,9 @@ class Game:
             #battle phase
             print('Battle Phase')
             while True: #pixel check
-                end = pyautogui.pixel(self.END_BAR[0] * 2, self.END_BAR[1] * 2)
+                #TODO: only for mac laptop display do you have to multiply by 2
+                #end = pyautogui.pixel(self.END_BAR[0] * 2, self.END_BAR[1] * 2)
+                end = self.control.check_pixel(self.END_BAR, self.IS_MAC_LAPTOP_SCREEN)
                 print('end: ', end)
                 if end[0] <= self.END_COLOR[0] + 20 and end[1] <= self.END_COLOR[1] + 20 and end[2] <= self.END_COLOR[2] + 20:
                     break
@@ -130,6 +146,21 @@ class Game:
     def play_step(self, n_round, n_move):
         screenshot = self.control.screenshot(filename=f"{n_round}{n_move}screenshot.png", path="logs/")
         
+        #Check for golden circles
+        gold_results = self.gold_detection.predict(source=screenshot, verbose=False)[0]
+        if len(gold_results.boxes) > 0:
+            print('Detected gold circle(s)!')
+            for box in gold_results.boxes.xyxy.cpu().numpy():
+                x1, y1, x2, y2 = box.astype(int)
+                x = int((x1 + x2)/2)
+                y = int((y1 + y2)/2)
+                point = (self.LEFT + x, self.TOP + y)
+                print(f'Clicking: x:{x} y:{y}')
+                self.control.click(point)
+                time.sleep(3)
+                #self.recheck_board()
+        
+        return
         #TODO: Get elixir -> check back on results and do error checking
         elixr_img = self.control.get_cropped_images(screenshot, self.ELIXR_REGION)[0]
         elixr_img.save(f"logs/{n_round}{n_move}elixr.png")
@@ -169,36 +200,45 @@ class Game:
         #print(state)
         
         #TODO: Get agent move 0 - 105
-        action, position = self.decode_action(random.randint(0, 3))
+        action, position = self.decode_action(random.randint(0, 104))
         print(f"action: {action}, position: {position}")
         row = int(position / 5)
         col = position % 5
+        fpoint = self.BOARD[row][col]
         
         #TODO: Execute move
         if action == "buy":
             print("buying: ", position)
             self.merge.buy_card(position)
             if position == 0:
-                self.control.click(100, 900)
+                self.control.click(self.HAND[0])
             elif position == 1:
-                self.control.click(175, 900)
+                self.control.click(self.HAND[1])
             else:
-                self.control.click(250, 900)
+                self.control.click(self.HAND[2])
             return
         elif action == "sell":
             print("selling: ", row, col)
             self.merge.sell_card(row, col)
-            spot = self.BOARD[row][col]
-            self.control.drag(spot[0], spot[1], 100, 900)
+            self.control.drag(fpoint, self.HAND[0])
             return
         elif action == "move_to_front":
-            self.merge.move_to_front()
+            print(f"Moving: {row}{col} to the front!")
+            _, r, c = self.merge.move_to_front(row, col)
+            tpoint = self.BOARD[r][c]
+            self.control.drag(fpoint, tpoint)
             return
         elif action == "move_to_back":
-            self.merge.move_to_back()
+            print(f"Moving: {row}{col} to the back!")
+            _, r, c = self.merge.move_to_back(row, col)
+            tpoint = self.BOARD[r][c]
+            self.control.drag(fpoint, tpoint)
             return
         elif action == "move_to_bench":
-            self.merge.move_to_bench()
+            print(f"Moving: {row}{col} to the bench!")
+            _, r, c = self.merge.move_to_bench(row, col)
+            tpoint = self.BOARD[r][c]
+            self.control.drag(fpoint, tpoint)
             return
         else:
             print("doing nothing")
@@ -218,7 +258,36 @@ class Game:
         else:
             return ("no_action", None)
         
+    def recheck_board(self) -> bool:
+        for row in range(self.merge.ROWS):
+            for col in range(self.merge.COLS):
+                prev = self.merge.map[row][col]
+                self.control.click(self.BOARD[row][col])
+                card_image = pyautogui.screenshot(region=(self.CARD_PICTURE_REGION[0][0] + self.LEFT, self.CARD_PICTURE_REGION[0][1] + self.TOP, (self.CARD_PICTURE_REGION[0][2] - self.CARD_PICTURE_REGION[0][0]), (self.CARD_PICTURE_REGION[0][3] - self.CARD_PICTURE_REGION[0][1])))
+                card = self.card_match.match(card_image)
+                level_image = pyautogui.screenshot(region=(self.CARD_LEVEL_REGION[0][0], self.CARD_LEVEL_REGION[0][1], self.CARD_LEVEL_REGION[0][2] - self.CARD_LEVEL_REGION[0][0], self.CARD_LEVEL_REGION[0][3] - self.CARD_LEVEL_REGION[0][1]))
+                level = self.level_match.match(level_image)
+                if prev == 0:
+                    if card == 'no_card':
+                        #do nothing
+                        continue
+                    else:
+                        #add new card
+                        self.merge.add_card(str.upper(card), level, row, col)
+                        return True
+                else:
+                    if prev.level == level:
+                        #do nothing
+                        continue
+                    else:
+                        #change level TODO: make sure this reference actually changes the object
+                        prev.level = level
+                        return True
+        
+        return False
+
+                    
+        
         
 g = Game()
 g.play_game()
-

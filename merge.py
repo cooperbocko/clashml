@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 from enum import Enum
+from typing import Tuple
 import numpy as np
 
 @dataclass(frozen=True)
@@ -244,6 +245,7 @@ class Merge:
         hand = np.array([1 if card != 0 else 0 for card in self.hand])
         hand_positions = np.array([card.hand_position if card != 0 else 0 for card in self.hand])
         #TODO: have synergies updated after every action?
+        self.update_syns()
         synergies = np.array(self.syns)
         elixir = np.array([self.elixir])
         max_placement = np.array([self.max_placement])
@@ -282,6 +284,22 @@ class Merge:
         self.hand[int(card_2.get_index() / 4)] = card_2
         self.hand[int(card_3.get_index() / 4)] = card_3
         return True
+    
+    def add_card(self, card: str, level: int, row: int, col: int) -> bool:
+        if card not in self.CARDS:
+            print('Card not found!')
+            return False
+        
+        if row not in range(0, self.ROWS) or col not in range(0, self.COLS):
+            print('Location not in board range!')
+            return False
+        
+        level_card = LeveledCard(self.CARDS[card], level, row, col)
+        self.map[row][col] = level_card
+        self.current_cards[level_card.get_index()] = level_card
+        self.update_syns
+        return True
+        
     
     def add_starting_card(self, card: str, level: int) -> bool:
         if card not in self.CARDS:
@@ -329,12 +347,38 @@ class Merge:
         print(']')
         
     #for simplicity of game actions
-    def move_to_front(self):
-        return
-    def move_to_back(self):
-        return
-    def move_to_bench(self):
-        return
+    def move_to_front(self, row: int, col: int) -> Tuple[bool, int, int]:
+        #find first open spot, if nothing is open just replace the first slot
+        r, c = 0, 0
+        for col in range(self.COLS):
+            if self.map[r][col] == 0:
+                c = col
+                break
+        
+        b = self.move_card(row, col, r, c)
+        return (b, r, c)
+    
+    def move_to_back(self, row: int, col: int) -> Tuple[bool, int, int]:
+        #find first open spot, if nothing is open just replace the first slot
+        r, c = self.ROWS-2, 0
+        for col in range(self.COLS):
+            if self.map[r][col] == 0:
+                c = col
+                break
+        
+        b = self.move_card(row, col, r, c)
+        return (b, r, c)
+    
+    def move_to_bench(self, row: int, col: int) -> Tuple[bool, int, int]:
+        #find first open spot, if nothing is open just replace the first slot
+        r, c = self.ROWS-1, 0
+        for col in range(self.COLS):
+            if self.map[r][col] == 0:
+                c = col
+                break
+        
+        b = self.move_card(row, col, r, c)
+        return (b, r, c)
 
     
         
