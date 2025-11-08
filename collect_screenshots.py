@@ -32,4 +32,4 @@ def on_press():
         c.screenshot(filename=filename, path='images/game_screenshots/')
         
 filename1 = f"screenshot_{datetime.now()}.png"
-card_level.screenshot(filename=filename1, path='images/game_screenshots/')
+c.screenshot()

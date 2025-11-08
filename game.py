@@ -1,3 +1,4 @@
+from curses import OK
 from turtle import left
 import pyautogui
 from merge import Merge
@@ -45,9 +46,12 @@ class Game:
     ELIXR_REGION = [(308, 822, 356, 872)]
     
     #placement region
-    PLACEMENT_REGION = [(202, 355, 254, 386)] #crop
+    PLACEMENT_REGION = [(199, 352, 257, 389)] #crop
     CARD_PICTURE_REGION = [(197, 143, 272, 237)] #crop
     CARD_LEVEL_REGION = [(291, 225, 310, 243)] #screen shot
+    
+    PLAY_AGAIN_REGION = [(43, 786, 201, 840)]
+    OK_REGION = [(214, 786, 372, 840)]
     
     #click points
     BATTLE = (220, 786)
@@ -68,6 +72,8 @@ class Game:
     SAFE_CLICK = (400, 950)
     END_BAR = (109, 963) #~5 seconds
     END_COLOR = [23, 25, 46]
+    PLAY_AGAIN = (122, 879)
+    OK = (300, 880)
     
     def __init__(self):
         self.merge = Merge()
@@ -79,12 +85,10 @@ class Game:
         self.gold_detection = YOLO("models/gold_circle_11.pt")
         
     def play_game(self):
-        #TODO: click game button
         print('Starting game!\n')
         self.control.click(self.BATTLE)
         time.sleep(10)
         
-        #TODO: get starting card
         print('Getting Starting Card!')
         start1 = self.BOARD[0][2]
         start2 = self.BOARD[3][2]
@@ -101,47 +105,55 @@ class Game:
         self.control.click(self.SAFE_CLICK)
         self.merge.print_map()
         
-        #TODO: game loop
         print('Entering game loop!\n')
         game_over = False
         game_round = 0
         while not game_over:
             game_round += 1
             print(f'----------Round {game_round}-----------------------\n')
-            #deploy phase
-            #TODO: check for golden circles
             print('Starting Deploy phase!')
             move = 0
             while True: 
                 move += 1
                 print(f'----------Move {move}-----------------------\n')
                 self.play_step(game_round, move)
-                #TODO: only for mac laptop display do you have to multiply by 2
                 end = self.control.check_pixel(self.END_BAR, self.IS_MAC_LAPTOP_SCREEN)
+                print("end: ", end)
                 if end[0] <= self.END_COLOR[0] + 20 and end[1] <= self.END_COLOR[1] + 20 and end[2] <= self.END_COLOR[2] + 20:
                     break
                 
                 print('current map:')
                 self.merge.print_map()
-                time.sleep(5)
+                time.sleep(2)
             
             #transition
-            time.sleep(10)
+            time.sleep(7)
 
-            #battle phase
             print('Battle Phase')
-            while True: #pixel check
-                #TODO: only for mac laptop display do you have to multiply by 2
-                #end = pyautogui.pixel(self.END_BAR[0] * 2, self.END_BAR[1] * 2)
+            while True: 
                 end = self.control.check_pixel(self.END_BAR, self.IS_MAC_LAPTOP_SCREEN)
                 print('end: ', end)
                 if end[0] <= self.END_COLOR[0] + 20 and end[1] <= self.END_COLOR[1] + 20 and end[2] <= self.END_COLOR[2] + 20:
                     break
-                time.sleep(1)
+                
+                #TODO: detect game over
+                screenshot = self.control.screenshot()
+                max_placement_img = np.array(self.control.get_cropped_images(screenshot, self.PLACEMENT_REGION)[0])
+                ok_image = np.array(self.control.get_cropped_images(screenshot, self.OK_REGION)[0])
+                play_again_image = np.array(self.control.get_cropped_images(screenshot, self.PLAY_AGAIN_REGION)[0])
+                ok = self.text_detection.detect_text(ok_image)
+                play_again = self.text_detection.detect_text(play_again_image)
+                
+                if len(ok) > 0:
+                    print("ok: ", ok)
+                
+                if len(play_again) > 0:
+                    print("play again: ", play_again)
+                    game_over = True
+                    break
+                time.sleep(2)
                 
             time.sleep(5)
-                
-            #TODO: detect game over
     
     def play_step(self, n_round, n_move):
         screenshot = self.control.screenshot(filename=f"{n_round}{n_move}screenshot.png", path="logs/")
@@ -158,9 +170,8 @@ class Game:
                 print(f'Clicking: x:{x} y:{y}')
                 self.control.click(point)
                 time.sleep(3)
-                #self.recheck_board()
+                self.recheck_board()
         
-        return
         #TODO: Get elixir -> check back on results and do error checking
         elixr_img = self.control.get_cropped_images(screenshot, self.ELIXR_REGION)[0]
         elixr_img.save(f"logs/{n_round}{n_move}elixr.png")
@@ -177,15 +188,16 @@ class Game:
         #TODO: easy ocr is not cutting it or is it
         max_placement_img = self.control.get_cropped_images(screenshot, self.PLACEMENT_REGION)[0]
         max_placement_img.save(f"logs/{n_round}{n_move}max_placement.png")
-        max_placement_img = np.array(self.control.get_cropped_images(screenshot, self.PLACEMENT_REGION)[0])
-        max_placement = self.text_detection.detect_text(max_placement_img)
-        if len(max_placement) > 0:
-            max_placement = max_placement[0]
-        print('Full Text: ', max_placement)
-        if len(max_placement) > 0:
-            max_placement = int(max_placement[len(max_placement) - 1]) #get last part of text
+        max_placement_img = np.array(max_placement_img, dtype=np.uint8)
+        results = self.digit_model.predict(source=max_placement_img, verbose=False)[0]
+        boxes = results.boxes.xyxy.cpu().numpy()
+        labels = [results.names[int(i)] for i in results.boxes.cls]
+        sorted_detections = sorted(zip(labels, boxes), key=lambda x: x[1][0])
+        digits = ''.join(label for label, _ in sorted_detections)
+        if len(digits) > 0:
+            max_placement = int(digits[len(digits) - 1])
             print("max_placement: ", max_placement)
-        self.merge.max_placement = max_placement #TODO: change this
+            self.merge.max_placement = max_placement
 
         #TODO: Get cards
         card_images = self.control.get_cropped_images(screenshot, self.CARD_REGIONS)
@@ -197,7 +209,7 @@ class Game:
         
         #TODO: Get state
         state = self.merge.get_state()
-        #print(state)
+        print("State: ", state)
         
         #TODO: Get agent move 0 - 105
         action, position = self.decode_action(random.randint(0, 104))
@@ -256,7 +268,7 @@ class Game:
         elif action < self.NO_ACTION:
             return ("move_to_bench", action - self.MOVE_BENCH_START)
         else:
-            return ("no_action", None)
+            return ("no_action", 0)
         
     def recheck_board(self) -> bool:
         for row in range(self.merge.ROWS):
@@ -273,7 +285,7 @@ class Game:
                         continue
                     else:
                         #add new card
-                        self.merge.add_card(str.upper(card), level, row, col)
+                        self.merge.add_card_in(str.upper(card), level, row, col)
                         return True
                 else:
                     if prev.level == level:
