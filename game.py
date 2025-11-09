@@ -1,14 +1,14 @@
-from curses import OK
-from turtle import left
 import pyautogui
 from merge import Merge
 from control import Control
 from card_matcher import CardMatch
 from text_detect import TextDetect
 from image_match import ImageMatch
+from dqn import DQN, QTrainer, ReplayBuffer
 from PIL import Image
 import numpy as np
 from ultralytics import YOLO
+import torch
 import cv2
 import random
 import time
@@ -28,6 +28,10 @@ class Game:
     MOVE_BENCH_START = MOVE_BACK_START + NUM_BOARD_SLOTS
     NO_ACTION = MOVE_BENCH_START + NUM_BOARD_SLOTS
     TOTAL_ACTIONS = NO_ACTION + 1
+    
+    EPSILON = 1.0
+    EPSILON_MIN = 0.05
+    EPSILON_DECAY = 0.995
     
     #screen bounds
     TOP = 68
@@ -83,6 +87,12 @@ class Game:
         self.text_detection = TextDetect()
         self.digit_model = YOLO("models/clash_digits_11.pt")
         self.gold_detection = YOLO("models/gold_circle_11.pt")
+        self.policy_net = DQN(len(self.merge.get_state()), 128, self.TOTAL_ACTIONS)
+        self.target_net = DQN(len(self.merge.get_state()), 128, self.TOTAL_ACTIONS)
+        self.target_net.load_state_dict(self.policy_net.state_dict())
+        self.replay_buffer = ReplayBuffer()
+        self.trainer = QTrainer(self.policy_net, self.target_net, self.replay_buffer, 1e-3, 0.99)
+        self.e = self.EPSILON
         
     def play_game(self):
         print('Starting game!\n')
@@ -109,6 +119,12 @@ class Game:
         game_over = False
         game_round = 0
         while not game_over:
+            states = []
+            actions = []
+            rewards = []
+            next_states = []
+            dones = []
+            
             game_round += 1
             print(f'----------Round {game_round}-----------------------\n')
             print('Starting Deploy phase!')
@@ -116,7 +132,29 @@ class Game:
             while True: 
                 move += 1
                 print(f'----------Move {move}-----------------------\n')
-                self.play_step(game_round, move)
+                #self.play_step(game_round, move)
+                
+                self.gold_check()
+                state = self.update_state(game_round, move)
+                #print('state: ', state)
+                states.append(state)
+                #TODO: Get agent move 0 - 105
+                if random.random() < self.e:
+                    print('random action')
+                    action = random.randint(0, self.TOTAL_ACTIONS - 1)
+                else:
+                    with torch.no_grad():
+                        print('dqn action')
+                        q_values = self.policy_net(torch.FloatTensor(state))
+                        action = q_values.argmax().item()
+                self.e = max(self.EPSILON_MIN, self.e * self.EPSILON_DECAY)
+                actions.append(action)
+                reward = self.do_action(action)
+                print('reward: ', reward)
+                rewards.append(reward)
+                next_states.append(self.update_state(game_round, move + 1))
+                dones.append(False)
+                
                 end = self.control.check_pixel(self.END_BAR, self.IS_MAC_LAPTOP_SCREEN)
                 print("end: ", end)
                 if end[0] <= self.END_COLOR[0] + 20 and end[1] <= self.END_COLOR[1] + 20 and end[2] <= self.END_COLOR[2] + 20:
@@ -138,7 +176,6 @@ class Game:
                 
                 #TODO: detect game over
                 screenshot = self.control.screenshot()
-                max_placement_img = np.array(self.control.get_cropped_images(screenshot, self.PLACEMENT_REGION)[0])
                 ok_image = np.array(self.control.get_cropped_images(screenshot, self.OK_REGION)[0])
                 play_again_image = np.array(self.control.get_cropped_images(screenshot, self.PLAY_AGAIN_REGION)[0])
                 ok = self.text_detection.detect_text(ok_image)
@@ -150,10 +187,18 @@ class Game:
                 if len(play_again) > 0:
                     print("play again: ", play_again)
                     game_over = True
+                    dones[len(dones) - 1] = True
+                    
                     break
+                
+                #train
+                self.trainer.train_step(32)
                 time.sleep(2)
                 
+            self.replay_buffer.push(states, actions, rewards, next_states, dones)
             time.sleep(5)
+        
+        print('Game Over!')
     
     def play_step(self, n_round, n_move):
         screenshot = self.control.screenshot(filename=f"{n_round}{n_move}screenshot.png", path="logs/")
@@ -212,49 +257,54 @@ class Game:
         print("State: ", state)
         
         #TODO: Get agent move 0 - 105
-        action, position = self.decode_action(random.randint(0, 104))
+        if random.random() < self.EPSILON:
+            action = random.randint(0, self.TOTAL_ACTIONS - 1)
+        else:
+            with torch.no_grad():
+                q_values = self.policy_net(torch.FloatTensor(state))
+                action = q_values.argmax().item()
+        
+        action_name, position = self.decode_action(action)
         print(f"action: {action}, position: {position}")
         row = int(position / 5)
         col = position % 5
         fpoint = self.BOARD[row][col]
+        reward = 0
         
         #TODO: Execute move
-        if action == "buy":
+        if action_name == "buy":
             print("buying: ", position)
-            self.merge.buy_card(position)
+            _, reward = self.merge.buy_card(position)
             if position == 0:
                 self.control.click(self.HAND[0])
             elif position == 1:
                 self.control.click(self.HAND[1])
             else:
                 self.control.click(self.HAND[2])
-            return
-        elif action == "sell":
+        elif action_name == "sell":
             print("selling: ", row, col)
-            self.merge.sell_card(row, col)
+            _, reward = self.merge.sell_card(row, col)
             self.control.drag(fpoint, self.HAND[0])
-            return
-        elif action == "move_to_front":
+        elif action_name == "move_to_front":
             print(f"Moving: {row}{col} to the front!")
-            _, r, c = self.merge.move_to_front(row, col)
+            _, r, c, reward = self.merge.move_to_front(row, col)
             tpoint = self.BOARD[r][c]
             self.control.drag(fpoint, tpoint)
-            return
-        elif action == "move_to_back":
+        elif action_name == "move_to_back":
             print(f"Moving: {row}{col} to the back!")
-            _, r, c = self.merge.move_to_back(row, col)
+            _, r, c, reward = self.merge.move_to_back(row, col)
             tpoint = self.BOARD[r][c]
             self.control.drag(fpoint, tpoint)
-            return
-        elif action == "move_to_bench":
+        elif action_name == "move_to_bench":
             print(f"Moving: {row}{col} to the bench!")
-            _, r, c = self.merge.move_to_bench(row, col)
+            _, r, c, reward = self.merge.move_to_bench(row, col)
             tpoint = self.BOARD[r][c]
             self.control.drag(fpoint, tpoint)
-            return
         else:
             print("doing nothing")
-            return
+            
+        next_state = self.merge.get_state()
+        self.replay_buffer(state, action)
         
     def decode_action(self, action: int) -> tuple[str, int]:
         if action < self.SELL_START:
@@ -297,6 +347,105 @@ class Game:
                         return True
         
         return False
+    
+    def update_state(self, n_round, n_move):
+        screenshot = self.control.screenshot(filename=f"{n_round}{n_move}screenshot.png", path="logs/")
+        
+        #TODO: Get elixir -> check back on results and do error checking
+        elixr_img = self.control.get_cropped_images(screenshot, self.ELIXR_REGION)[0]
+        elixr_img.save(f"logs/{n_round}{n_move}elixr.png")
+        elixr_img = np.array(elixr_img, dtype=np.uint8)
+        results = self.digit_model.predict(source=elixr_img, verbose=False)[0]
+        boxes = results.boxes.xyxy.cpu().numpy()
+        labels = [results.names[int(i)] for i in results.boxes.cls]
+        sorted_detections = sorted(zip(labels, boxes), key=lambda x: x[1][0])
+        digits = ''.join(label for label, _ in sorted_detections)
+        elixr = int(digits)
+        print("elixir: ", elixr)
+        self.merge.elixir = elixr
+        
+        #TODO: easy ocr is not cutting it or is it
+        max_placement_img = self.control.get_cropped_images(screenshot, self.PLACEMENT_REGION)[0]
+        max_placement_img.save(f"logs/{n_round}{n_move}max_placement.png")
+        max_placement_img = np.array(max_placement_img, dtype=np.uint8)
+        results = self.digit_model.predict(source=max_placement_img, verbose=False)[0]
+        boxes = results.boxes.xyxy.cpu().numpy()
+        labels = [results.names[int(i)] for i in results.boxes.cls]
+        sorted_detections = sorted(zip(labels, boxes), key=lambda x: x[1][0])
+        digits = ''.join(label for label, _ in sorted_detections)
+        if len(digits) > 0:
+            max_placement = int(digits[len(digits) - 1])
+            print("max_placement: ", max_placement)
+            self.merge.max_placement = max_placement
+            
+        #TODO: Get cards
+        card_images = self.control.get_cropped_images(screenshot, self.CARD_REGIONS)
+        cards = []
+        for image in card_images:
+            cards.append(str.upper(self.card_match.match(image))) #TODO: upper
+        print("Hand: ", cards)
+        self.merge.update_hand(cards[0], cards[1], cards[2])
+        
+        return self.merge.get_state()
+        
+    def do_action(self, action):
+        action_name, position = self.decode_action(action)
+        print(f"action: {action}, position: {position}")
+        row = int(position / 5)
+        col = position % 5
+        fpoint = self.BOARD[row][col]
+        reward = 0
+        
+        #TODO: Execute move
+        if action_name == "buy":
+            print("buying: ", position)
+            _, reward = self.merge.buy_card(position)
+            if position == 0:
+                self.control.click(self.HAND[0])
+            elif position == 1:
+                self.control.click(self.HAND[1])
+            else:
+                self.control.click(self.HAND[2])
+        elif action_name == "sell":
+            print("selling: ", row, col)
+            _, reward = self.merge.sell_card(row, col)
+            self.control.drag(fpoint, self.HAND[0])
+        elif action_name == "move_to_front":
+            print(f"Moving: {row}{col} to the front!")
+            _, r, c, reward = self.merge.move_to_front(row, col)
+            tpoint = self.BOARD[r][c]
+            self.control.drag(fpoint, tpoint)
+        elif action_name == "move_to_back":
+            print(f"Moving: {row}{col} to the back!")
+            _, r, c, reward = self.merge.move_to_back(row, col)
+            tpoint = self.BOARD[r][c]
+            self.control.drag(fpoint, tpoint)
+        elif action_name == "move_to_bench":
+            print(f"Moving: {row}{col} to the bench!")
+            _, r, c, reward = self.merge.move_to_bench(row, col)
+            tpoint = self.BOARD[r][c]
+            self.control.drag(fpoint, tpoint)
+        else:
+            print("doing nothing")
+            
+        return reward
+    
+    def gold_check(self):
+        screenshot = self.control.screenshot()
+        
+        #Check for golden circles
+        gold_results = self.gold_detection.predict(source=screenshot, verbose=False)[0]
+        if len(gold_results.boxes) > 0:
+            print('Detected gold circle(s)!')
+            for box in gold_results.boxes.xyxy.cpu().numpy():
+                x1, y1, x2, y2 = box.astype(int)
+                x = int((x1 + x2)/2)
+                y = int((y1 + y2)/2)
+                point = (self.LEFT + x, self.TOP + y)
+                print(f'Clicking: x:{x} y:{y}')
+                self.control.click(point)
+                time.sleep(3)
+                self.recheck_board()
 
                     
         
