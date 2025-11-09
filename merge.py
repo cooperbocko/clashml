@@ -133,6 +133,7 @@ class Merge:
         #check if there is a card to move
         if self.map[oldrow][oldcol] == 0:
             print('No card to move!')
+            print(oldrow, oldcol)
             return (False, -1)
         
         #check if moving from bench and moving to an open spot
@@ -360,7 +361,7 @@ class Merge:
         print(']')
         
     #for simplicity of game actions
-    def move_to_front(self, row: int, col: int) -> Tuple[bool, int, int, int]:
+    def move_to_front(self, old_row: int, old_col: int) -> Tuple[bool, int, int, int]:
         #find first open spot, if nothing is open just replace the first slot
         r, c = 0, 0
         for col in range(self.COLS):
@@ -368,10 +369,10 @@ class Merge:
                 c = col
                 break
         
-        b, reward = self.move_card(row, col, r, c)
+        b, reward = self.move_card(old_row, old_col, r, c)
         return (b, r, c, reward)
     
-    def move_to_back(self, row: int, col: int) -> Tuple[bool, int, int, int]:
+    def move_to_back(self, old_row: int, old_col: int) -> Tuple[bool, int, int, int]:
         #find first open spot, if nothing is open just replace the first slot
         r, c = self.ROWS-2, 0
         for col in range(self.COLS):
@@ -379,10 +380,10 @@ class Merge:
                 c = col
                 break
         
-        b, reward = self.move_card(row, col, r, c)
+        b, reward = self.move_card(old_row, old_col, r, c)
         return (b, r, c, reward)
     
-    def move_to_bench(self, row: int, col: int) -> Tuple[bool, int, int, int]:
+    def move_to_bench(self, old_row: int, old_col: int) -> Tuple[bool, int, int, int]:
         #find first open spot, if nothing is open just replace the first slot
         r, c = self.ROWS-1, 0
         for col in range(self.COLS):
@@ -390,7 +391,7 @@ class Merge:
                 c = col
                 break
         
-        b, reward = self.move_card(row, col, r, c)
+        b, reward = self.move_card(old_row, old_col, r, c)
         return (b, r, c, reward)
 
     

@@ -29,7 +29,7 @@ class Game:
     NO_ACTION = MOVE_BENCH_START + NUM_BOARD_SLOTS
     TOTAL_ACTIONS = NO_ACTION + 1
     
-    EPSILON = 1.0
+    EPSILON = 0
     EPSILON_MIN = 0.05
     EPSILON_DECAY = 0.995
     
@@ -95,6 +95,7 @@ class Game:
         self.e = self.EPSILON
         
     def play_game(self):
+        total_reward = 0
         print('Starting game!\n')
         self.control.click(self.BATTLE)
         time.sleep(10)
@@ -150,6 +151,7 @@ class Game:
                 self.e = max(self.EPSILON_MIN, self.e * self.EPSILON_DECAY)
                 actions.append(action)
                 reward = self.do_action(action)
+                total_reward += reward
                 print('reward: ', reward)
                 rewards.append(reward)
                 next_states.append(self.update_state(game_round, move + 1))
@@ -165,7 +167,7 @@ class Game:
                 time.sleep(2)
             
             #transition
-            time.sleep(7)
+            time.sleep(10)
 
             print('Battle Phase')
             while True: 
@@ -193,12 +195,13 @@ class Game:
                 
                 #train
                 self.trainer.train_step(32)
-                time.sleep(2)
+                time.sleep(1)
                 
             self.replay_buffer.push(states, actions, rewards, next_states, dones)
             time.sleep(5)
         
         print('Game Over!')
+        print('Total Reward: ', total_reward)
     
     def play_step(self, n_round, n_move):
         screenshot = self.control.screenshot(filename=f"{n_round}{n_move}screenshot.png", path="logs/")
