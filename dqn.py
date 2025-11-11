@@ -7,7 +7,7 @@ import torch.nn.functional as F
 import torch.optim as optim
 import os
 
-class DQN(nn.module):
+class DQN(nn.Module):
     def __init__(self, state_size: int, hidden_size: int, action_size: int):
         super().__init__()
         self.linear1 = nn.Linear(state_size, hidden_size)
@@ -30,13 +30,17 @@ class ReplayBuffer:
     def __init__(self, capacity=10000):
         self.buffer = deque(maxlen=capacity)
         
-    def push(self, state, action, reward, next_state, done):
-        self.buffer.append((state, action, reward, next_state, done))
+    def push(self, states, actions, rewards, next_states, dones):
+        for state, action, reward, next_state, done in zip(states, actions, rewards, next_states, dones):
+            self.buffer.append((state, action, reward, next_state, done))
         
     def sample(self, batch_size):
-        batch = random.sample(self.buffer)
+        batch = random.sample(self.buffer, batch_size)
         states, actions, rewards, next_states, dones = map(np.array, zip(*batch))
         return states, actions, rewards, next_states, dones
+    
+    def size(self):
+        return len(self.buffer)
     
 class QTrainer:
     def __init__(self, policy_net, target_net, replay_buffer, lr, gamma):
@@ -48,7 +52,7 @@ class QTrainer:
         self.gamma = gamma
         
     def train_step(self, batch_size):
-        if len(self.replay_buffer) < batch_size:
+        if self.replay_buffer.size() < batch_size:
             return
         
         states, actions, rewards, next_states, dones = self.replay_buffer.sample(batch_size)
