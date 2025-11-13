@@ -55,6 +55,7 @@ class Game:
     CARD_PICTURE_REGION = [(197, 143, 272, 237)] #crop
     CARD_LEVEL_REGION = [(291, 225, 310, 243)] #screen shot
     
+    DEFEATED_REGION = [(155, 179, 259, 202)]
     PLAY_AGAIN_REGION = [(43, 786, 201, 840)]
     OK_REGION = [(214, 786, 372, 840)]
     
@@ -138,6 +139,7 @@ class Game:
         print('Entering game loop!\n')
         game_over = False
         game_round = 0
+        state = self.update_state(n_game, game_round, 0)
         while not game_over:
             states = []
             actions = []
@@ -155,7 +157,7 @@ class Game:
                 #self.play_step(game_round, move)
                 
                 self.gold_check()
-                state = self.update_state(n_game, game_round, move)
+                #state = self.update_state(n_game, game_round, move)
                 #print('state: ', state)
                 states.append(state)
                 #TODO: Get agent move 0 - 105
@@ -173,7 +175,9 @@ class Game:
                 total_reward += reward
                 print('reward: ', reward)
                 rewards.append(reward)
-                next_states.append(self.update_state(n_game, game_round, move + 1))
+                state = self.update_state(n_game, game_round, move + 1)
+                next_states.append(state)
+                #next_states.append(self.update_state(n_game, game_round, move + 1))
                 dones.append(False)
                 
                 end = self.control.check_pixel(self.END_BAR, self.IS_MAC_LAPTOP_SCREEN)
@@ -209,7 +213,19 @@ class Game:
                     print("play again: ", play_again)
                     game_over = True
                     dones[len(dones) - 1] = True
-                    
+                    time.sleep(3)
+                    screenshot = self.control.screenshot()
+                    defeated_image = np.array(self.control.get_cropped_images(screenshot, self.DEFEATED_REGION)[0])
+                    defeated = self.text_detection.detect_text(defeated_image)
+                    if len(defeated) > 0:
+                        defeated = str.lower(defeated[0])
+                    print(defeated)
+                    if defeated == 'defeated':
+                        rewards[len(rewards) - 1] += 30
+                        total_reward += 30
+                    else:
+                        rewards[len(rewards) - 1] -= 30
+                        total_reward -= 30
                     break
                 
                 #train
