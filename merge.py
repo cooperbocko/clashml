@@ -90,7 +90,7 @@ class Merge:
         self.map = [[0 for _ in range(self.ROWS)] for _ in range(self.COLS)]
         self.elixir = 0
         self.current_cards = [0 for _ in range(self.N_CARDS)]
-        self.hand = [0 for _ in range(int(self.N_CARDS / 4))] #TODO: is this the best way to do this
+        self.hand = [0 for _ in range(int(self.N_CARDS / 4))] 
         self.max_placement = 2
         self.syns = [0 for _ in range(self.N_SYNS)]
         

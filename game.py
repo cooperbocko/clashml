@@ -13,6 +13,7 @@ import cv2
 import random
 import time
 import matplotlib.pyplot as plt
+import os
 
 class Game:
     #system settings
@@ -94,11 +95,29 @@ class Game:
         self.trainer = QTrainer(self.policy_net, self.target_net, self.replay_buffer, 1e-3, 0.99)
         self.e = self.EPSILON
         
-    def play_game(self):
+    def train(self, n_games):
+        best = 0
+        
+        self.control.click(self.BATTLE)
+        
+        for i in range(n_games - 1):
+            if not os.path.isdir(f'logs/{i}'):
+                os.mkdir(f'logs/{i}')
+            time.sleep(10)
+            
+            run = self.play_game(i)
+            if run > best:
+                best = run
+                self.policy_net.save('./models', 'best_merge.pth')
+            self.target_net.load_state_dict(self.policy_net.state_dict())
+
+            self.merge = Merge()
+            self.control.click(self.PLAY_AGAIN)
+        self.play_game(n_games - 1)
+        
+    def play_game(self, n_game):
         total_reward = 0
         print('Starting game!\n')
-        self.control.click(self.BATTLE)
-        time.sleep(10)
         
         print('Getting Starting Card!')
         start1 = self.BOARD[0][2]
@@ -136,7 +155,7 @@ class Game:
                 #self.play_step(game_round, move)
                 
                 self.gold_check()
-                state = self.update_state(game_round, move)
+                state = self.update_state(n_game, game_round, move)
                 #print('state: ', state)
                 states.append(state)
                 #TODO: Get agent move 0 - 105
@@ -154,7 +173,7 @@ class Game:
                 total_reward += reward
                 print('reward: ', reward)
                 rewards.append(reward)
-                next_states.append(self.update_state(game_round, move + 1))
+                next_states.append(self.update_state(n_game, game_round, move + 1))
                 dones.append(False)
                 
                 end = self.control.check_pixel(self.END_BAR, self.IS_MAC_LAPTOP_SCREEN)
@@ -164,7 +183,7 @@ class Game:
                 
                 print('current map:')
                 self.merge.print_map()
-                time.sleep(2)
+                #time.sleep(1)
             
             #transition
             time.sleep(10)
@@ -202,6 +221,7 @@ class Game:
         
         print('Game Over!')
         print('Total Reward: ', total_reward)
+        return total_reward
     
     def play_step(self, n_round, n_move):
         screenshot = self.control.screenshot(filename=f"{n_round}{n_move}screenshot.png", path="logs/")
@@ -351,25 +371,29 @@ class Game:
         
         return False
     
-    def update_state(self, n_round, n_move):
-        screenshot = self.control.screenshot(filename=f"{n_round}{n_move}screenshot.png", path="logs/")
+    def update_state(self, n_game, n_round, n_move):
+        screenshot = self.control.screenshot(filename=f"{n_round}{n_move}screenshot.png", path=f"logs/{n_game}/")
         
         #TODO: Get elixir -> check back on results and do error checking
         elixr_img = self.control.get_cropped_images(screenshot, self.ELIXR_REGION)[0]
-        elixr_img.save(f"logs/{n_round}{n_move}elixr.png")
+        elixr_img.save(f"logs/{n_game}/{n_round}{n_move}elixr.png")
         elixr_img = np.array(elixr_img, dtype=np.uint8)
         results = self.digit_model.predict(source=elixr_img, verbose=False)[0]
         boxes = results.boxes.xyxy.cpu().numpy()
         labels = [results.names[int(i)] for i in results.boxes.cls]
         sorted_detections = sorted(zip(labels, boxes), key=lambda x: x[1][0])
         digits = ''.join(label for label, _ in sorted_detections)
-        elixr = int(digits)
+        #TODO: quick fix -> figure out digit model issue
+        if len(digits) >= 3:
+            elixr = int(digits[0:2])
+        else:
+            elixr = int(digits)
         print("elixir: ", elixr)
         self.merge.elixir = elixr
         
         #TODO: easy ocr is not cutting it or is it
         max_placement_img = self.control.get_cropped_images(screenshot, self.PLACEMENT_REGION)[0]
-        max_placement_img.save(f"logs/{n_round}{n_move}max_placement.png")
+        max_placement_img.save(f"logs/{n_game}/{n_round}{n_move}max_placement.png")
         max_placement_img = np.array(max_placement_img, dtype=np.uint8)
         results = self.digit_model.predict(source=max_placement_img, verbose=False)[0]
         boxes = results.boxes.xyxy.cpu().numpy()
@@ -454,4 +478,4 @@ class Game:
         
         
 g = Game()
-g.play_game()
+g.train(3)
