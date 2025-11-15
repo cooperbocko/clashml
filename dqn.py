@@ -23,7 +23,7 @@ class DQN(nn.Module):
         if not os.path.exists(file_path):
             os.makedirs(file_path)
         
-        file_name = os.join(file_path, file_name)
+        file_name = os.path.join(file_path, file_name)
         torch.save(self.state_dict(), file_name)
         
 class ReplayBuffer:

@@ -42,7 +42,6 @@ class Synergy(Enum):
     FIRE = 13
 
 class Merge: 
-    #TODO: add method for recifying changes made from golden bubbles
     CARDS = {
     'KNIGHT' : Card(2, Synergy.NOBEL, Synergy.JUGGERNAUT, 0, True),
     'PRINCE' : Card(3, Synergy.NOBEL, Synergy.BRAWLER, 4, True),
@@ -90,7 +89,7 @@ class Merge:
         self.map = [[0 for _ in range(self.ROWS)] for _ in range(self.COLS)]
         self.elixir = 0
         self.current_cards = [0 for _ in range(self.N_CARDS)]
-        self.hand = [0 for _ in range(int(self.N_CARDS / 4))] #TODO: is this the best way to do this
+        self.hand = [0 for _ in range(int(self.N_CARDS / 4))] 
         self.max_placement = 2
         self.syns = [0 for _ in range(self.N_SYNS)]
         
@@ -130,13 +129,11 @@ class Merge:
             print("Not in bounds!")
             return (False, -1)
         
-        #check if there is a card to move
         if self.map[oldrow][oldcol] == 0:
             print('No card to move!')
             print(oldrow, oldcol)
             return (False, -1)
         
-        #check if moving from bench and moving to an open spot
         if oldrow == self.ROWS - 1 and self.map[newrow][newcol] == 0:
             if self.is_board_full():
                 print('Cannot move card!')
@@ -156,12 +153,10 @@ class Merge:
         return (True, reward)
     
     def add_card(self, card: Card) -> Tuple[bool, int]:
-        #check if it combines
         if(self.merge(card)):
             print("merged!")
             return (True, 3)
                     
-        #check for space on the board or on the bench
         if self.is_game_full():
             print("Game is full!")
             return (False, -1)
@@ -203,14 +198,12 @@ class Merge:
                         card_location = (row, 5)
                         break
         
-        #if card location is still not found check bench
         if card_location == (-1, -1):
             for col in range(self.COLS):
                 if self.map[self.ROWS - 1][col] == 0:
                     card_location = (self.ROWS - 1, col)
                     break
         
-        #actually add the card
         new_level_card = LeveledCard(card, 1, card_location[0], card_location[1])
         self.current_cards[new_level_card.get_index()] = new_level_card
         self.map[new_level_card.row][new_level_card.col] = new_level_card
@@ -218,22 +211,19 @@ class Merge:
         _, reward = self.update_syns()
         return (True, reward)
     
-    #TODO: # star into 4 star merge when 4 star is present exception
     def merge(self, card: Card) -> bool:
         if self.current_cards[card.base_index] == 0:
-            return False #no merge
+            return False 
         
         highest_level_card = self.current_cards[card.base_index]
         for i in range(card.base_index, card.base_index + 4):
             if self.current_cards[i] != 0:
-                #get highest level card and remove all cards that are merging
                 highest_level_card = self.current_cards[i]
                 self.current_cards[i] = 0
                 self.map[highest_level_card.row][highest_level_card.col] = 0
             else:
                 break
             
-        #level card up and add it back to list and map
         highest_level_card.level = highest_level_card.level + 1
         self.current_cards[highest_level_card.get_index()] = highest_level_card
         self.map[highest_level_card.row][highest_level_card.col] = highest_level_card
@@ -299,7 +289,6 @@ class Merge:
         self.current_cards[level_card.get_index()] = level_card
         return True
         
-    
     def add_starting_card(self, card: str, level: int) -> bool:
         if card not in self.CARDS:
             print('Card not found!')
@@ -317,7 +306,6 @@ class Merge:
         self.current_cards[level_card.get_index()] = level_card
         return True
     
-    #not the most optimal approach but much cleaner code wise
     def update_syns(self) -> Tuple[bool, int]:
         old_syns = self.syns.copy()
         
@@ -393,6 +381,3 @@ class Merge:
         
         b, reward = self.move_card(old_row, old_col, r, c)
         return (b, r, c, reward)
-
-    
-        
