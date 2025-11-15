@@ -29,7 +29,7 @@ class Game:
     TOTAL_ACTIONS = NO_ACTION + 1
     
     #dqn
-    EPSILON = 0
+    EPSILON = 1
     EPSILON_MIN = 0.05
     EPSILON_DECAY = 0.995
     
@@ -232,7 +232,7 @@ class Game:
                 
             self.replay_buffer.push(states, actions, rewards, next_states, dones)
             #round transition time
-            time.sleep(5)
+            time.sleep(7)
         
         print('Game Over!')
         print('Total Reward: ', total_reward)
