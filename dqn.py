@@ -26,6 +26,10 @@ class DQN(nn.Module):
         file_name = os.path.join(file_path, file_name)
         torch.save(self.state_dict(), file_name)
         
+    def load(self, path: str):
+        state_dict = torch.load(path)
+        self.load_state_dict(state_dict)
+        
 class ReplayBuffer:
     def __init__(self, capacity=10000):
         self.buffer = deque(maxlen=capacity)

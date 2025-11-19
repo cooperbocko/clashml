@@ -1,4 +1,3 @@
-from ast import Tuple
 from PIL import Image
 import pyautogui
 import time
@@ -13,11 +12,11 @@ class Control:
         self.right = right
         self.bottom = bottom
         
-    def click(self, point: Tuple[int, int]):
+    def click(self, point: List[int, int]):
         pyautogui.moveTo(point[0], point[1])
         pyautogui.click()
         
-    def drag(self, start_point: Tuple[int, int], end_point: Tuple[int, int]):
+    def drag(self, start_point: List[int, int], end_point: List[int, int]):
         pyautogui.moveTo(start_point[0], start_point[1])
         pyautogui.mouseDown()
         pyautogui.moveTo(end_point[0], end_point[1])
@@ -30,7 +29,7 @@ class Control:
         screenshot.save(output_path)
         return screenshot
     
-    def check_pixel(self, point: Tuple[int, int], is_mac_laptop_screen:bool = False) -> Tuple[int, int, int]:
+    def check_pixel(self, point: List[int, int], is_mac_laptop_screen:bool = False) -> Tuple[int, int, int]:
         x, y = point
         if is_mac_laptop_screen:
             x = x * 2
@@ -38,7 +37,7 @@ class Control:
         
         return pyautogui.pixel(x, y)
     
-    def get_cropped_images(self, screenshot: Image, regions: List[Tuple[int, int, int, int]]) -> list[Image]:
+    def get_cropped_images(self, screenshot: Image, regions: List[List[int, int, int, int]]) -> list[Image]:
         cropped_images = []
         for region in regions:
             crop = screenshot.crop(region)
