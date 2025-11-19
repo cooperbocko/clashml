@@ -49,7 +49,7 @@ class Game:
         self.elixr_region = self.regions["elixr_region"]
         self.placement_region = self.regions["placement_region"]
         self.card_picture_region = self.regions["card_picture_region"]
-        self.card_level_region = self.regions["card_level_regions"]
+        self.card_level_region = self.regions["card_level_region"]
         self.defeated_region = self.regions["defeated_region"]
         self.play_again_region = self.regions["play_again_region"]
         self.ok_region = self.regions["ok_region"]
@@ -143,8 +143,9 @@ class Game:
             while True: 
                 move += 1
                 print(f'----------Move {move}-----------------------\n')
-                print('current map:')
-                self.merge.print_map()
+                
+                #print state:
+                self.merge.print_state()
                 
                 if self.gold_check():
                     state = self.update_state(n_game, game_round, move + 1)
@@ -286,7 +287,6 @@ class Game:
             elixr = int(digits[0:2])
         else:
             elixr = int(digits)
-        print("elixir: ", elixr)
         self.merge.elixir = elixr
         
         max_placement_img = self.control.get_cropped_images(screenshot, self.placement_region)[0]
@@ -299,21 +299,18 @@ class Game:
         digits = ''.join(label for label, _ in sorted_detections)
         if len(digits) > 0:
             max_placement = int(digits[len(digits) - 1])
-            print("max_placement: ", max_placement)
             self.merge.max_placement = max_placement
             
         card_images = self.control.get_cropped_images(screenshot, self.card_regions)
         cards = []
         for image in card_images:
             cards.append(str.upper(self.card_match.match(image)))
-        print("Hand: ", cards)
         self.merge.update_hand(cards[0], cards[1], cards[2])
         
         return self.merge.get_state()
         
     def do_action(self, action) -> Tuple[int, bool]:
         action_name, position = self.decode_action(action)
-        print(f"action: {action}, position: {position}")
         row = int(position / 5)
         col = position % 5
         fpoint = self.board[row][col]
@@ -387,5 +384,5 @@ class Game:
             return True
         return False
                   
-g = Game()
+g = Game("./configs/mac_config.json")
 g.train(3)

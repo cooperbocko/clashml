@@ -335,6 +335,9 @@ class Merge:
             
         return (True, reward)
     
+    def print_state(self):
+        print('')
+    
     def print_map(self):
         print('[')
         for row in range(self.ROWS):
