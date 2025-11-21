@@ -1,7 +1,6 @@
 from PIL import Image
 import pyautogui
 import time
-import os
 from typing import List, Tuple
 
 class Control:

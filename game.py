@@ -1,10 +1,8 @@
 import json
 from typing import Tuple
 import pyautogui
-import image_match
 from merge import Merge
 from control import Control
-from card_matcher import CardMatch
 from text_detect import TextDetect
 from image_match import ImageMatch
 from dqn import DQN, QTrainer, ReplayBuffer
@@ -299,7 +297,6 @@ class Game:
         max_placement = 0
         
         elixr_img = self.control.get_cropped_images(screenshot, self.elixr_region)[0]
-        #elixr_img = np.array(elixr_img, dtype=np.uint8)
         results = self.digit_model.predict(source=elixr_img, verbose=False)[0]
         boxes = results.boxes.xyxy.cpu().numpy()
         labels = [results.names[int(i)] for i in results.boxes.cls]
@@ -313,7 +310,6 @@ class Game:
         self.merge.elixir = elixr
         
         max_placement_img = self.control.get_cropped_images(screenshot, self.placement_region)[0]
-        #max_placement_img = np.array(max_placement_img, dtype=np.uint8)
         results = self.digit_model.predict(source=max_placement_img, verbose=False)[0]
         boxes = results.boxes.xyxy.cpu().numpy()
         labels = [results.names[int(i)] for i in results.boxes.cls]
