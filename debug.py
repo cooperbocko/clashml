@@ -1,4 +1,5 @@
 import os
+from datetime import datetime
 from merge import Merge
 from PIL import Image
 
@@ -6,7 +7,7 @@ from PIL import Image
 class Debug():
     def __init__(self, merge: Merge, path: str='debug'):
         self.merge = merge
-        self.path
+        self.path = path
         self.ngame = 0
         self.nround = 0
         self.nstep = 0
@@ -30,7 +31,7 @@ class Debug():
         print(f'reward: {self.reward}')
         print('map after action: ')
         self.merge.print_map()
-        self.nstep + 1
+        self.nstep += 1
         
     def print_round(self):
         print(f'round summary: ')
@@ -42,12 +43,15 @@ class Debug():
         print(f'game summary: ')
         print(f'# of rounds: {self.nround}')
         print(f'total reward: {self.total_reward}')
+        self.nround = 0
+        self.ngame += 1
         
     def save_image(self, image: Image, thing: str, phase: str):
-        dir_path = f"debug/{self.ngame}/{self.nround}"
+        dir_path = f"debug/{self.ngame}/{self.nround}/{phase}"
         os.makedirs(dir_path, exist_ok=True)
 
-        file_name = f"{phase}_{thing}_{self.nstep:03d}.png"
+        time = datetime.now()
+        file_name = f"{thing}_{self.nstep}_{time}.png"
         image.save(os.path.join(dir_path, file_name))
         
     def print_divider(self, text):

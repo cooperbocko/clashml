@@ -1,6 +1,7 @@
 import json
 from typing import Tuple
 import pyautogui
+import image_match
 from merge import Merge
 from control import Control
 from card_matcher import CardMatch
@@ -33,7 +34,6 @@ class Game:
     
     def __init__(self, config_path: str, debug: bool = False):
         self.debug_mode = debug
-        self.debug = Debug()
         
         with open(config_path, "r") as f:
             self.config = json.load(f)
@@ -70,8 +70,9 @@ class Game:
         self.end_colors = self.colors["end_colors"]
         
         self.merge = Merge()
+        self.debug = Debug(self.merge)
         self.control = Control(self.left, self.top, self.right, self.bottom) #TODO: make config file give screen size/constatns
-        self.card_match = CardMatch() #TODO: make config file give screen size/constatns
+        self.card_match = ImageMatch("card_match_db.npz", "images/cards") #TODO: make config file give screen size/constatns
         self.level_match = ImageMatch("level_match_db.npz", "images/levels")
         self.text_detection = TextDetect()
         self.digit_model = YOLO("models/clash_digits_11.pt")
@@ -88,7 +89,7 @@ class Game:
         self.control.click(self.battle)
         
         for i in range(n_games - 1):
-            print(f'Playing game{i}')
+            print(f'Playing game {i}')
             #load time
             time.sleep(10)
             
@@ -185,8 +186,8 @@ class Game:
                 
                 end = self.control.check_pixel(self.end_bar, self.is_mac_laptop_screen)
                 if self.debug_mode:
-                    print('end: ', end)
                     self.debug.print_step()
+                    print('end: ', end)
                     
                 if end[0] <= self.end_colors[0] + 20 and end[1] <= self.end_colors[1] + 20 and end[2] <= self.end_colors[2] + 20:
                     break
@@ -232,7 +233,7 @@ class Game:
                         print(f'ok: {ok}')
                         print(f'play_again: {play_again}')
                         print(f'defeated: {defeated}')
-                        self.debug.save_image(screenshot, 'end')
+                        self.debug.save_image(screenshot, 'screenshot', 'end')
                     break
                 
                 self.trainer.train_step(32)
@@ -294,9 +295,11 @@ class Game:
     
     def update_state(self):
         screenshot = self.control.screenshot()
+        elixr = 0
+        max_placement = 0
         
         elixr_img = self.control.get_cropped_images(screenshot, self.elixr_region)[0]
-        elixr_img = np.array(elixr_img, dtype=np.uint8)
+        #elixr_img = np.array(elixr_img, dtype=np.uint8)
         results = self.digit_model.predict(source=elixr_img, verbose=False)[0]
         boxes = results.boxes.xyxy.cpu().numpy()
         labels = [results.names[int(i)] for i in results.boxes.cls]
@@ -310,7 +313,7 @@ class Game:
         self.merge.elixir = elixr
         
         max_placement_img = self.control.get_cropped_images(screenshot, self.placement_region)[0]
-        max_placement_img = np.array(max_placement_img, dtype=np.uint8)
+        #max_placement_img = np.array(max_placement_img, dtype=np.uint8)
         results = self.digit_model.predict(source=max_placement_img, verbose=False)[0]
         boxes = results.boxes.xyxy.cpu().numpy()
         labels = [results.names[int(i)] for i in results.boxes.cls]
@@ -330,7 +333,8 @@ class Game:
             self.debug.save_image(screenshot, 'screenshot', 'battle')
             self.debug.save_image(elixr_img, 'elixr', 'battle')
             self.debug.save_image(max_placement_img, 'placement', 'battle')
-            self.debug.save_image(card_images, 'cards', 'battle')
+            for card_image in card_images:
+                self.debug.save_image(card_image, 'cards', 'battle')
             self.debug.elixr = elixr
             self.debug.max_placement = max_placement
             self.debug.cards = cards
