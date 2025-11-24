@@ -29,6 +29,7 @@ class ImageMatch:
 
         scores = {card: cosine_similarity([query_emb], [emb])[0][0] for card, emb in self.db.items()}
         best = max(scores, key=scores.get)
+        print(f"✅ Best match: {best}")
         return best
         
     def load_db(self):

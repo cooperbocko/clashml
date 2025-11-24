@@ -1,8 +1,8 @@
-import json
 from typing import Tuple
 import pyautogui
 from merge import Merge
 from control import Control
+from card_matcher import CardMatch
 from text_detect import TextDetect
 from image_match import ImageMatch
 from dqn import DQN, QTrainer, ReplayBuffer
@@ -11,9 +11,12 @@ from ultralytics import YOLO
 import torch
 import random
 import time
-from debug import Debug
+import os
 
 class Game:
+    #system settings
+    IS_MAC_LAPTOP_SCREEN = True
+
     #actions
     NUM_HAND_SLOTS = 3
     NUM_BOARD_SLOTS = 25
@@ -30,47 +33,52 @@ class Game:
     EPSILON_MIN = 0.05
     EPSILON_DECAY = 0.995
     
-    def __init__(self, config_path: str, debug: bool = False):
-        self.debug_mode = debug
-        
-        with open(config_path, "r") as f:
-            self.config = json.load(f)
-            
-        self.system_settings = self.config["system_settings"]
-        self.is_mac_laptop_screen = self.system_settings["is_mac_laptop_screen"]
-        
-        self.screen_bounds = self.config["screen_bounds"]
-        self.left = self.screen_bounds["left"]
-        self.top = self.screen_bounds["top"]
-        self.right = self.screen_bounds["right"]
-        self.bottom = self.screen_bounds["bottom"]
-        
-        self.regions = self.config["regions"]
-        self.card_regions = self.regions["card_regions"]
-        self.elixr_region = self.regions["elixr_region"]
-        self.placement_region = self.regions["placement_region"]
-        self.card_picture_region = self.regions["card_picture_region"]
-        self.card_level_region = self.regions["card_level_region"]
-        self.defeated_region = self.regions["defeated_region"]
-        self.play_again_region = self.regions["play_again_region"]
-        self.ok_region = self.regions["ok_region"]
-        
-        self.click_points = self.config["click_points"]
-        self.board = self.click_points["board"]
-        self.hand = self.click_points["hand"]
-        self.battle = self.click_points["battle"]
-        self.safe_click = self.click_points["safe_click"]
-        self.end_bar = self.click_points["end_bar"]
-        self.play_again = self.click_points["play_again"]
-        self.ok = self.click_points["ok"]
-        
-        self.colors = self.config["colors"]
-        self.end_colors = self.colors["end_colors"]
-        
+    #screen bounds
+    TOP = 68
+    LEFT = 8
+    BOTTOM = 966
+    RIGHT = 423
+    
+    #crop regions
+    CARD_REGIONS = [
+        (53, 782, 128, 874),
+        (134, 782, 209, 874),
+        (215, 782, 290, 874)
+    ]
+    ELIXR_REGION = [(308, 822, 356, 872)]
+    PLACEMENT_REGION = [(199, 352, 257, 389)] #crop
+    CARD_PICTURE_REGION = [(197, 143, 272, 237)] #crop
+    CARD_LEVEL_REGION = [(291, 225, 310, 243)] #screen shot
+    DEFEATED_REGION = [(155, 179, 259, 202)]
+    PLAY_AGAIN_REGION = [(43, 786, 201, 840)]
+    OK_REGION = [(214, 786, 372, 840)]
+    
+    #click points
+    BATTLE = (220, 786)
+    BOARD = [
+        [(120, 600), (175, 600), (225, 600), (280, 600), (330, 600)],
+        [(95, 640), (150, 640), (200, 640), (250, 640), (305, 640)],
+        [(120, 680), (175, 680), (225, 680), (280, 680), (330, 680)],
+        [(95, 720), (150, 720), (200, 720), (250, 720), (305, 720)],
+        [(75, 785), (125, 785), (180, 785), (235, 785), (283, 785)]
+    ]
+    HAND = [
+        (100, 900),
+        (175, 900),
+        (250, 900)
+    ]
+    CARD_PRESENT = (416, 202)
+    CARD_PRESENT_COLORS = [31, 31, 53]
+    SAFE_CLICK = (400, 950)
+    END_BAR = (109, 963) #~5 seconds
+    END_COLOR = [23, 25, 46]
+    PLAY_AGAIN = (122, 879)
+    OK = (300, 880)
+    
+    def __init__(self):
         self.merge = Merge()
-        self.debug = Debug(self.merge)
-        self.control = Control(self.left, self.top, self.right, self.bottom) #TODO: make config file give screen size/constatns
-        self.card_match = ImageMatch("card_match_db.npz", "images/cards") #TODO: make config file give screen size/constatns
+        self.control = Control(self.LEFT, self.TOP, self.RIGHT, self.BOTTOM) #TODO: make config file give screen size/constatns
+        self.card_match = CardMatch() #TODO: make config file give screen size/constatns
         self.level_match = ImageMatch("level_match_db.npz", "images/levels")
         self.text_detection = TextDetect()
         self.digit_model = YOLO("models/clash_digits_11.pt")
@@ -84,168 +92,150 @@ class Game:
         
     def train(self, n_games):
         best = float('-inf')
-        self.control.click(self.battle)
+        self.control.click(self.BATTLE)
         
-        for i in range(n_games):
-            print(f'Playing game {i}')
+        for i in range(n_games - 1):
+            if not os.path.isdir(f'logs/{i}'):
+                os.mkdir(f'logs/{i}')
             #load time
             time.sleep(10)
             
-            run = self.play_game()
-            self.merge = Merge()
+            run = self.play_game(i)
             if run > best:
                 best = run
                 self.policy_net.save('./models', 'best_merge.pth')
             self.target_net.load_state_dict(self.policy_net.state_dict())
-            
-            if self.debug_mode:
-                self.debug.print_game()
-                self.debug.merge = self.merge
-            
-            if i == n_games - 1:
-                self.control.click(self.ok)
-                self.policy_net.save('./models', 'last_merge.pth')
-                break
 
-            self.control.click(self.play_again)
+            self.merge = Merge()
+            self.control.click(self.PLAY_AGAIN)
+            
+        last = self.play_game(n_games - 1)
+        self.control.click(self.OK)
+        if last > best:
+            self.policy_net.save('./models', 'best_merge.pth')
+        self.policy_net.save('./models', 'last_merge.pth')
         
-    def play_game(self):
+    def play_game(self, n_game):
         total_reward = 0
+        print('Starting game!\n')
         
-        if self.debug_mode:
-            print('Starting game!\n')
-        
-        start1 = self.board[0][2]
-        start2 = self.board[3][2]
+        print('Getting Starting Card!')
+        start1 = self.BOARD[0][2]
+        start2 = self.BOARD[3][2]
         self.control.click(start1)
-        start_card_image = pyautogui.screenshot(region=(self.card_picture_region[0][0] + self.left, self.card_picture_region[0][1] + self.top, (self.card_picture_region[0][2] - self.card_picture_region[0][0]), (self.card_picture_region[0][3] - self.card_picture_region[0][1])))
+        start_card_image = pyautogui.screenshot(region=(self.CARD_PICTURE_REGION[0][0] + self.LEFT, self.CARD_PICTURE_REGION[0][1] + self.TOP, (self.CARD_PICTURE_REGION[0][2] - self.CARD_PICTURE_REGION[0][0]), (self.CARD_PICTURE_REGION[0][3] - self.CARD_PICTURE_REGION[0][1])))
         start_card = self.card_match.match(start_card_image)
         if (start_card == 'no_card'):
             self.control.click(start2)
-            start_card_image = pyautogui.screenshot(region=(self.card_picture_region[0][0] + self.left, self.card_picture_region[0][1] + self.top, (self.card_picture_region[0][2] - self.card_picture_region[0][0]), (self.card_picture_region[0][3] - self.card_picture_region[0][1])))
+            start_card_image = pyautogui.screenshot(region=(self.CARD_PICTURE_REGION[0][0] + self.LEFT, self.CARD_PICTURE_REGION[0][1] + self.TOP, (self.CARD_PICTURE_REGION[0][2] - self.CARD_PICTURE_REGION[0][0]), (self.CARD_PICTURE_REGION[0][3] - self.CARD_PICTURE_REGION[0][1])))
             start_card = self.card_match.match(start_card_image)
         self.merge.add_starting_card(str.upper(start_card), 1)
-        self.control.click(self.safe_click)
+        print('Added: ', start_card)
+        print('')
+        self.control.click(self.SAFE_CLICK)
+        self.merge.print_map()
         
-        if self.debug_mode:
-            print('Added: ', start_card)
-            print('Entering game loop!\n')
-        
+        print('Entering game loop!\n')
         game_over = False
+        game_round = 0
         while not game_over:
             states = []
             actions = []
             rewards = []
             next_states = []
             dones = []
-            state = self.update_state()
             
-            if self.debug_mode:
-                self.debug.print_round_line()
-                print('Starting Deploy phase!')
-                
+            game_round += 1
+            move = 0
+            state = self.update_state(n_game, game_round, move)
+            print(f'----------Round {game_round}-----------------------\n')
+            print('Starting Deploy phase!')
             while True: 
-                if self.debug_mode:
-                    self.debug.print_step_line()
-                    print('Map before action:')
-                    self.merge.print_map()
+                move += 1
+                print(f'----------Move {move}-----------------------\n')
+                print('current map:')
+                self.merge.print_map()
                 
                 if self.gold_check():
-                    state = self.update_state()
+                    state = self.update_state(n_game, game_round, move + 1)
                 states.append(state)
                 
                 if random.random() < self.e:
+                    print('random action')
                     action = random.randint(0, self.TOTAL_ACTIONS - 1)
                     self.e = max(self.EPSILON_MIN, self.e * self.EPSILON_DECAY)
-                    
-                    if self.debug_mode:
-                        self.debug.random_action = True
                 else:
                     with torch.no_grad():
+                        print('dqn action')
                         q_values = self.policy_net(torch.FloatTensor(state))
                         action = q_values.argmax().item()
-                        
-                    if self.debug_mode:
-                        self.debug.random_action = False
                 actions.append(action)
                 
                 reward, changed = self.do_action(action)
                 total_reward += reward
                 rewards.append(reward)
+                print('reward: ', reward)
                 
                 if changed:
-                    state = self.update_state()
+                    state = self.update_state(n_game, game_round, move)
                 else:
                     state = self.merge.get_state()
                 next_states.append(state)
                 dones.append(False)
                 
-                end = self.control.check_pixel(self.end_bar, self.is_mac_laptop_screen)
-                if self.debug_mode:
-                    self.debug.print_step()
-                    print('end: ', end)
-                    
-                if end[0] <= self.end_colors[0] + 20 and end[1] <= self.end_colors[1] + 20 and end[2] <= self.end_colors[2] + 20:
+                end = self.control.check_pixel(self.END_BAR, self.IS_MAC_LAPTOP_SCREEN)
+                print("end: ", end)
+                if end[0] <= self.END_COLOR[0] + 20 and end[1] <= self.END_COLOR[1] + 20 and end[2] <= self.END_COLOR[2] + 20:
                     break
             
             #transition time
             time.sleep(10)
 
-            if self.debug_mode:
-                print('Starting Battle Phase')
-                
-            not_end = True
-            while not_end: 
-                end = self.control.check_pixel(self.end_bar, self.is_mac_laptop_screen)
-                if self.debug_mode:
-                    print('end: ', end)
-                if end[0] <= self.end_colors[0] + 20 and end[1] <= self.end_colors[1] + 20 and end[2] <= self.end_colors[2] + 20:
-                    not_end = False
-                    time.sleep(5)
+            print('Starting Battle Phase')
+            while True: 
+                end = self.control.check_pixel(self.END_BAR, self.IS_MAC_LAPTOP_SCREEN)
+                print('end: ', end)
+                if end[0] <= self.END_COLOR[0] + 20 and end[1] <= self.END_COLOR[1] + 20 and end[2] <= self.END_COLOR[2] + 20:
+                    break
                 
                 screenshot = self.control.screenshot()
-                ok_image = np.array(self.control.get_cropped_images(screenshot, self.ok_region)[0])
-                play_again_image = np.array(self.control.get_cropped_images(screenshot, self.play_again_region)[0])
+                ok_image = np.array(self.control.get_cropped_images(screenshot, self.OK_REGION)[0])
+                play_again_image = np.array(self.control.get_cropped_images(screenshot, self.PLAY_AGAIN_REGION)[0])
                 ok = self.text_detection.detect_text(ok_image)
                 play_again = self.text_detection.detect_text(play_again_image)
-                        
+                
+                if len(ok) > 0:
+                    print("ok: ", ok)
+                
                 if len(play_again) > 0:
+                    print("play again: ", play_again)
                     game_over = True
                     dones[len(dones) - 1] = True
                     time.sleep(3)
                     
                     screenshot = self.control.screenshot()
-                    defeated_image = np.array(self.control.get_cropped_images(screenshot, self.defeated_region)[0])
+                    defeated_image = np.array(self.control.get_cropped_images(screenshot, self.DEFEATED_REGION)[0])
                     defeated = self.text_detection.detect_text(defeated_image)
                     if len(defeated) > 0:
                         defeated = str.lower(defeated[0])
-                    
-                    if 'defeated' in defeated:
+                    print(defeated)
+                    if defeated == 'defeated':
                         rewards[len(rewards) - 1] -= 30
                         total_reward -= 30
                     else:
                         rewards[len(rewards) - 1] += 30
                         total_reward += 30
-                        
-                    if self.debug_mode:
-                        print(f'ok: {ok}')
-                        print(f'play_again: {play_again}')
-                        print(f'defeated: {defeated}')
-                        self.debug.save_image(screenshot, 'screenshot', 'end')
                     break
                 
                 self.trainer.train_step(32)
+                time.sleep(1)
                 
             self.replay_buffer.push(states, actions, rewards, next_states, dones)
             #round transition time
-            time.sleep(2)
-            
-            if self.debug_mode:
-                self.debug.print_round()
+            time.sleep(7)
         
-        if self.debug_mode:
-            self.debug.total_reward = total_reward
-            
+        print('Game Over!')
+        print('Total Reward: ', total_reward)
         return total_reward
         
     def decode_action(self, action: int) -> tuple[str, int]:
@@ -266,11 +256,11 @@ class Game:
         for row in range(self.merge.ROWS):
             for col in range(self.merge.COLS):
                 prev = self.merge.map[row][col]
-                self.control.click(self.board[row][col])
-                card_image = pyautogui.screenshot(region=(self.card_picture_region[0][0] + self.left, self.card_picture_region[0][1] + self.top, (self.card_picture_region[0][2] - self.card_picture_region[0][0]), (self.card_picture_region[0][3] - self.card_picture_region[0][1])))
+                self.control.click(self.BOARD[row][col])
+                card_image = pyautogui.screenshot(region=(self.CARD_PICTURE_REGION[0][0] + self.LEFT, self.CARD_PICTURE_REGION[0][1] + self.TOP, (self.CARD_PICTURE_REGION[0][2] - self.CARD_PICTURE_REGION[0][0]), (self.CARD_PICTURE_REGION[0][3] - self.CARD_PICTURE_REGION[0][1])))
                 card = self.card_match.match(card_image)
-                level_image = pyautogui.screenshot(region=(self.card_level_region[0][0], self.card_level_region[0][1], self.card_level_region[0][2] - self.card_level_region[0][0], self.card_level_region[0][3] - self.card_level_region[0][1]))
-                level = int(self.level_match.match(level_image))
+                level_image = pyautogui.screenshot(region=(self.CARD_LEVEL_REGION[0][0], self.CARD_LEVEL_REGION[0][1], self.CARD_LEVEL_REGION[0][2] - self.CARD_LEVEL_REGION[0][0], self.CARD_LEVEL_REGION[0][3] - self.CARD_LEVEL_REGION[0][1]))
+                level = self.level_match.match(level_image)
                 if prev == 0:
                     if card == 'no_card':
                         #do nothing
@@ -290,12 +280,12 @@ class Game:
         
         return False
     
-    def update_state(self):
-        screenshot = self.control.screenshot()
-        elixr = 0
-        max_placement = 0
+    def update_state(self, n_game, n_round, n_move):
+        screenshot = self.control.screenshot(filename=f"{n_round}{n_move}screenshot.png", path=f"logs/{n_game}/")
         
-        elixr_img = self.control.get_cropped_images(screenshot, self.elixr_region)[0]
+        elixr_img = self.control.get_cropped_images(screenshot, self.ELIXR_REGION)[0]
+        elixr_img.save(f"logs/{n_game}/{n_round}{n_move}elixr.png")
+        elixr_img = np.array(elixr_img, dtype=np.uint8)
         results = self.digit_model.predict(source=elixr_img, verbose=False)[0]
         boxes = results.boxes.xyxy.cpu().numpy()
         labels = [results.names[int(i)] for i in results.boxes.cls]
@@ -306,9 +296,12 @@ class Game:
             elixr = int(digits[0:2])
         else:
             elixr = int(digits)
+        print("elixir: ", elixr)
         self.merge.elixir = elixr
         
-        max_placement_img = self.control.get_cropped_images(screenshot, self.placement_region)[0]
+        max_placement_img = self.control.get_cropped_images(screenshot, self.PLACEMENT_REGION)[0]
+        max_placement_img.save(f"logs/{n_game}/{n_round}{n_move}max_placement.png")
+        max_placement_img = np.array(max_placement_img, dtype=np.uint8)
         results = self.digit_model.predict(source=max_placement_img, verbose=False)[0]
         boxes = results.boxes.xyxy.cpu().numpy()
         labels = [results.names[int(i)] for i in results.boxes.cls]
@@ -316,78 +309,62 @@ class Game:
         digits = ''.join(label for label, _ in sorted_detections)
         if len(digits) > 0:
             max_placement = int(digits[len(digits) - 1])
+            print("max_placement: ", max_placement)
             self.merge.max_placement = max_placement
             
-        card_images = self.control.get_cropped_images(screenshot, self.card_regions)
+        card_images = self.control.get_cropped_images(screenshot, self.CARD_REGIONS)
         cards = []
         for image in card_images:
             cards.append(str.upper(self.card_match.match(image)))
+        print("Hand: ", cards)
         self.merge.update_hand(cards[0], cards[1], cards[2])
-        
-        if self.debug_mode:
-            self.debug.save_image(screenshot, 'screenshot', 'battle')
-            self.debug.save_image(elixr_img, 'elixr', 'battle')
-            self.debug.save_image(max_placement_img, 'placement', 'battle')
-            for card_image in card_images:
-                self.debug.save_image(card_image, 'cards', 'battle')
-            self.debug.elixr = elixr
-            self.debug.max_placement = max_placement
-            self.debug.cards = cards
         
         return self.merge.get_state()
         
     def do_action(self, action) -> Tuple[int, bool]:
         action_name, position = self.decode_action(action)
+        print(f"action: {action}, position: {position}")
         row = int(position / 5)
         col = position % 5
-        fpoint = self.board[row][col]
+        fpoint = self.BOARD[row][col]
         reward = 0
         valid = True
         changed = True
         
         if action_name == "buy":
+            print("buying: ", position)
             valid, reward = self.merge.buy_card(position)
-            changed = valid
-            
-            if valid:
-                if position == 0:
-                    self.control.click(self.hand[0])
-                elif position == 1:
-                    self.control.click(self.hand[1])
-                else:
-                    self.control.click(self.hand[2])
+            if position == 0:
+                self.control.click(self.HAND[0])
+            elif position == 1:
+                self.control.click(self.HAND[1])
+            else:
+                self.control.click(self.HAND[2])
         elif action_name == "sell":
+            print("selling: ", row, col)
             valid, reward = self.merge.sell_card(row, col)
             changed = valid
-            
-            if valid:
-                self.control.drag(fpoint, self.hand[0])
+            self.control.drag(fpoint, self.HAND[0])
         elif action_name == "move_to_front":
+            print(f"Moving: {row}{col} to the front!")
             valid, r, c, reward = self.merge.move_to_front(row, col)
             changed = False
-            tpoint = self.board[r][c]
-            
-            if valid:
-                self.control.drag(fpoint, tpoint)
+            tpoint = self.BOARD[r][c]
+            self.control.drag(fpoint, tpoint)
         elif action_name == "move_to_back":
+            print(f"Moving: {row}{col} to the back!")
             valid, r, c, reward = self.merge.move_to_back(row, col)
             changed = False
-            tpoint = self.board[r][c]
-            
-            if valid:
-                self.control.drag(fpoint, tpoint)
+            tpoint = self.BOARD[r][c]
+            self.control.drag(fpoint, tpoint)
         elif action_name == "move_to_bench":
+            print(f"Moving: {row}{col} to the bench!")
             valid, r, c, reward = self.merge.move_to_bench(row, col)
             changed = False
-            tpoint = self.board[r][c]
-            
-            if valid:
-                self.control.drag(fpoint, tpoint)
-                
-        if self.debug_mode:
-            self.debug.action = action
-            self.debug.position = (row, col)
-            self.debug.reward = reward
+            tpoint = self.BOARD[r][c]
+            self.control.drag(fpoint, tpoint)
+        else:
+            print("doing nothing")
             
         return (reward, changed)
     
@@ -401,7 +378,7 @@ class Game:
                 x1, y1, x2, y2 = box.astype(int)
                 x = int((x1 + x2)/2)
                 y = int((y1 + y2)/2)
-                point = (self.left + x, self.top + y)
+                point = (self.LEFT + x, self.TOP + y)
                 print(f'Clicking: x:{x} y:{y}')
                 self.control.click(point)
                 time.sleep(3)
@@ -409,5 +386,5 @@ class Game:
             return True
         return False
                   
-g = Game("./configs/mac_monitor_config.json", True)
-g.train(10)
+g = Game()
+g.train(3)
