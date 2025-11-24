@@ -10,8 +10,10 @@ models
 images
 runs
 logs
+debug
 
 roboflow.py
 
 *.jpg
 *.png
+
