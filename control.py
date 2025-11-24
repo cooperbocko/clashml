@@ -1,7 +1,6 @@
 from PIL import Image
 import pyautogui
 import time
-import os
 from typing import List, Tuple
 
 class Control:
@@ -22,11 +21,9 @@ class Control:
         pyautogui.moveTo(end_point[0], end_point[1])
         pyautogui.mouseUp()
             
-    def screenshot(self, filename: str="screenshot_pyautogui.png", path: str="~/Desktop/") -> Image:
-        output_path = os.path.expanduser(f"{path}{filename}")
+    def screenshot(self) -> Image:
         region = (self.left, self.top, self.right - self.left, self.bottom - self.top)
         screenshot = pyautogui.screenshot(region = region)
-        screenshot.save(output_path)
         return screenshot
     
     def check_pixel(self, point: List[int], is_mac_laptop_screen:bool = False) -> Tuple[int, int, int]:
