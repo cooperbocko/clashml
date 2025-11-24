@@ -177,8 +177,8 @@ class Merge:
                     elif self.map[row][0] == 0:
                         card_location = (row, 0)
                         break
-                    elif self.map[row][5] == 0:
-                        card_location = (row, 5)
+                    elif self.map[row][4] == 0:
+                        card_location = (row, 4)
                         break
             else:
                 for row in range(self.ROWS - 2 , -1, -1):
@@ -194,8 +194,8 @@ class Merge:
                     elif self.map[row][0] == 0:
                         card_location = (row, 0)
                         break
-                    elif self.map[row][5] == 0:
-                        card_location = (row, 5)
+                    elif self.map[row][4] == 0:
+                        card_location = (row, 4)
                         break
         
         if card_location == (-1, -1):

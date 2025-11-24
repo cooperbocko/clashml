@@ -86,30 +86,28 @@ class Game:
         best = float('-inf')
         self.control.click(self.battle)
         
-        for i in range(n_games - 1):
+        for i in range(n_games):
             print(f'Playing game {i}')
             #load time
             time.sleep(10)
             
             run = self.play_game()
+            self.merge = Merge()
             if run > best:
                 best = run
                 self.policy_net.save('./models', 'best_merge.pth')
             self.target_net.load_state_dict(self.policy_net.state_dict())
-
-            self.merge = Merge()
-            self.control.click(self.play_again)
             
             if self.debug_mode:
                 self.debug.print_game()
+                self.debug.merge = self.merge
             
-        last = self.play_game()
-        self.control.click(self.ok)
-        if last > best:
-            self.policy_net.save('./models', 'best_merge.pth')
-        self.policy_net.save('./models', 'last_merge.pth')
-        if self.debug_mode:
-                self.debug.print_game()
+            if i == n_games - 1:
+                self.control.click(self.ok)
+                self.policy_net.save('./models', 'last_merge.pth')
+                break
+
+            self.control.click(self.play_again)
         
     def play_game(self):
         total_reward = 0
@@ -196,12 +194,14 @@ class Game:
             if self.debug_mode:
                 print('Starting Battle Phase')
                 
-            while True: 
+            not_end = True
+            while not_end: 
                 end = self.control.check_pixel(self.end_bar, self.is_mac_laptop_screen)
                 if self.debug_mode:
                     print('end: ', end)
                 if end[0] <= self.end_colors[0] + 20 and end[1] <= self.end_colors[1] + 20 and end[2] <= self.end_colors[2] + 20:
-                    break
+                    not_end = False
+                    time.sleep(5)
                 
                 screenshot = self.control.screenshot()
                 ok_image = np.array(self.control.get_cropped_images(screenshot, self.ok_region)[0])
@@ -235,11 +235,10 @@ class Game:
                     break
                 
                 self.trainer.train_step(32)
-                time.sleep(1)
                 
             self.replay_buffer.push(states, actions, rewards, next_states, dones)
             #round transition time
-            time.sleep(7)
+            time.sleep(2)
             
             if self.debug_mode:
                 self.debug.print_round()
@@ -271,7 +270,7 @@ class Game:
                 card_image = pyautogui.screenshot(region=(self.card_picture_region[0][0] + self.left, self.card_picture_region[0][1] + self.top, (self.card_picture_region[0][2] - self.card_picture_region[0][0]), (self.card_picture_region[0][3] - self.card_picture_region[0][1])))
                 card = self.card_match.match(card_image)
                 level_image = pyautogui.screenshot(region=(self.card_level_region[0][0], self.card_level_region[0][1], self.card_level_region[0][2] - self.card_level_region[0][0], self.card_level_region[0][3] - self.card_level_region[0][1]))
-                level = self.level_match.match(level_image)
+                level = int(self.level_match.match(level_image))
                 if prev == 0:
                     if card == 'no_card':
                         #do nothing
@@ -410,5 +409,5 @@ class Game:
             return True
         return False
                   
-g = Game("./configs/mac_config.json", True)
-g.train(3)
+g = Game("./configs/mac_monitor_config.json", True)
+g.train(10)
