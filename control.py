@@ -62,13 +62,16 @@ class Control:
             print("\nDone.")
             
     @staticmethod
-    def check_screen_bounds():
+    def check_screen_bounds(is_mac_laptop_screen):
         print("Move your mouse around. Press Ctrl+C to stop.")
 
         try:
             while True:
                 x, y = pyautogui.position()
-                color = pyautogui.pixel(x * 2, y * 2)
+                if is_mac_laptop_screen:
+                    color = pyautogui.pixel(x * 2, y * 2)
+                else:
+                    color = pyautogui.pixel(x, y)
                 print(f"Mouse position: ({x}, {y}) {color}", end='\r')  # Overwrites the line
                 time.sleep(0.5)
         except KeyboardInterrupt:

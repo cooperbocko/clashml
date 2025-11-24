@@ -1,8 +1,12 @@
 from control import Control
 from datetime import datetime
 import time
+from PIL import Image
+import os
 
 CARD_PICTURE_REGION = [(197, 143, 272, 237)]
+card_regions = [[81, 786, 153, 876], [162, 786, 234, 876], [243, 786, 313, 876]]
+
 c = Control(8, 68, 423, 966)
 elixr = Control(315, 890, 365, 940)
 timez = Control(350, 220, 390, 270)
@@ -29,7 +33,24 @@ def on_press():
         key = input("Press a key: ")
         print(f"You pressed: {key}")
         filename = f"screenshot_{datetime.now()}.png"
-        c.screenshot(filename=filename, path='images/game_screenshots/')
+        path = 'images/game_screenshots'
+        s = c.screenshot()
+        s.save(os.path.join(path, filename))
         
-filename1 = f"screenshot_{datetime.now()}.png"
-c.screenshot()
+def get_card_pics():
+    path = './images/game_screenshots'
+    
+    for file in os.listdir(path):
+        file_path = os.path.join(path, file)
+        if os.path.isfile(file_path):
+            image = Image.open(file_path)
+            images = c.get_cropped_images(image, card_regions)
+            
+            x = 0
+            for image in images:
+                time = datetime.now()
+                image.save(f'./images/raw_cards/{x}{time}.png')
+                x += 1
+                
+                
+get_card_pics()

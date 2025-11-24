@@ -124,7 +124,9 @@ class Game:
             self.control.click(start2)
             start_card_image = pyautogui.screenshot(region=(self.card_picture_region[0][0] + self.left, self.card_picture_region[0][1] + self.top, (self.card_picture_region[0][2] - self.card_picture_region[0][0]), (self.card_picture_region[0][3] - self.card_picture_region[0][1])))
             start_card = self.card_match.match(start_card_image)
-        self.merge.add_starting_card(str.upper(start_card), 1)
+        level_image = pyautogui.screenshot(region=(self.card_level_region[0][0] + self.left, self.card_level_region[0][1] + self.top, (self.card_level_region[0][2] - self.card_level_region[0][0]), (self.card_level_region[0][3] - self.card_level_region[0][1])))
+        start_card_level = int(self.level_match.match(level_image))
+        self.merge.add_starting_card(str.upper(start_card), start_card_level)
         self.control.click(self.safe_click)
         
         if self.debug_mode:
