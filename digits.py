@@ -2,6 +2,7 @@ from ultralytics import YOLO
 from inference_sdk import InferenceHTTPClient
 from PIL import Image
 
+
 class DetectDigits:
     def __init__(self, is_roboflow, model_path):
         self.is_roboflow = is_roboflow
