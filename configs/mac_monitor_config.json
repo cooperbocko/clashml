@@ -1,6 +1,8 @@
 {
     "system_settings": {
-        "is_mac_laptop_screen": false
+        "is_mac_laptop_screen": false,
+        "is_roboflow": true,
+        "env_path": "./secret.env"
     },
 
     "screen_bounds": {

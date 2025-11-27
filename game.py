@@ -12,6 +12,7 @@ import torch
 import random
 import time
 from debug import Debug
+from digits import DetectDigits
 
 class Game:
     #actions
@@ -38,6 +39,8 @@ class Game:
             
         self.system_settings = self.config["system_settings"]
         self.is_mac_laptop_screen = self.system_settings["is_mac_laptop_screen"]
+        self.env_path = self.system_settings["env_path"]
+        self.is_roboflow = self.system_settings["is_roboflow"]
         
         self.screen_bounds = self.config["screen_bounds"]
         self.left = self.screen_bounds["left"]
@@ -73,7 +76,7 @@ class Game:
         self.card_match = ImageMatch("card_match_db.npz", "images/cards") #TODO: make config file give screen size/constatns
         self.level_match = ImageMatch("level_match_db.npz", "images/levels")
         self.text_detection = TextDetect()
-        self.digit_model = YOLO("models/clash_digits_11.pt")
+        self.digit_model = DetectDigits(self.is_roboflow, "models/clash_digits_11.pt", self.env_path)
         self.gold_detection = YOLO("models/gold_circle_11.pt")
         self.policy_net = DQN(len(self.merge.get_state()), 128, self.TOTAL_ACTIONS)
         self.target_net = DQN(len(self.merge.get_state()), 128, self.TOTAL_ACTIONS)

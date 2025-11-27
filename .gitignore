@@ -2,8 +2,7 @@
 .venv/
 
 #dotenv
-.env
-.env.*
+*.env
 
 #models for now
 models
@@ -16,4 +15,5 @@ roboflow.py
 
 *.jpg
 *.png
+
 

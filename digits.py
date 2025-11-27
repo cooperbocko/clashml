@@ -1,15 +1,19 @@
 from ultralytics import YOLO
 from inference_sdk import InferenceHTTPClient
 from PIL import Image
+import os
+from dotenv import load_dotenv
 
 
 class DetectDigits:
-    def __init__(self, is_roboflow, model_path):
+    def __init__(self, is_roboflow, model_path, env_path):
+        load_dotenv(env_path)
+        
         self.is_roboflow = is_roboflow
         self.yolo = YOLO(model_path)
         self.roboflow = InferenceHTTPClient(
             api_url='https://detect.roboflow.com',
-            api_key=ROBOFLOW_API_KEY
+            api_key=os.getenv("ROBOFLOW_API_KEY")
         )
         
     def predict(self, image):
@@ -28,10 +32,5 @@ class DetectDigits:
             digits = ''.join(label for label, _ in sorted_detections)
         
         return int(digits)
-    
-
-dd = DetectDigits(True, './models/clash_digits_11.pt')
-image = Image.open('./debug/0/2/battle/elixr_0_2025-11-24 12:03:55.821480.png')
-print(dd.predict(image))
 
 
