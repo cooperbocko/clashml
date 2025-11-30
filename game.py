@@ -1,6 +1,7 @@
 import json
 from typing import Tuple
 import pyautogui
+from sklearn.metrics import multilabel_confusion_matrix
 from merge import Merge
 from control import Control
 from text_detect import TextDetect
@@ -214,7 +215,7 @@ class Game:
                 ok = self.text_detection.detect_text(ok_image)
                 play_again = self.text_detection.detect_text(play_again_image)
                         
-                if len(play_again) > 0:
+                if len(play_again) > 0 and len(play_again[0]) > 4:
                     game_over = True
                     dones[len(dones) - 1] = True
                     time.sleep(3)
@@ -298,31 +299,18 @@ class Game:
     def update_state(self):
         screenshot = self.control.screenshot()
         elixr = 0
-        max_placement = 0
         
         elixr_img = self.control.get_cropped_images(screenshot, self.elixr_region)[0]
-        results = self.digit_model.predict(source=elixr_img, verbose=False)[0]
-        boxes = results.boxes.xyxy.cpu().numpy()
-        labels = [results.names[int(i)] for i in results.boxes.cls]
-        sorted_detections = sorted(zip(labels, boxes), key=lambda x: x[1][0])
-        digits = ''.join(label for label, _ in sorted_detections)
-        #TODO: quick fix -> figure out digit model issue
-        if len(digits) >= 3:
-            elixr = int(digits[0:2])
-        else:
-            elixr = int(digits)
-        self.merge.elixir = elixr
+        elixr = self.digit_model.predict(elixr_img)
+        if len(elixr) > 0:
+            self.merge.elixir = int(elixr)
         
         max_placement_img = self.control.get_cropped_images(screenshot, self.placement_region)[0]
-        results = self.digit_model.predict(source=max_placement_img, verbose=False)[0]
-        boxes = results.boxes.xyxy.cpu().numpy()
-        labels = [results.names[int(i)] for i in results.boxes.cls]
-        sorted_detections = sorted(zip(labels, boxes), key=lambda x: x[1][0])
-        digits = ''.join(label for label, _ in sorted_detections)
-        if len(digits) > 0:
-            max_placement = int(digits[len(digits) - 1])
-            self.merge.max_placement = max_placement
-            
+        max_placement = self.digit_model.predict(max_placement_img)
+        if len(max_placement) > 0:
+            max_placement = max_placement[len(max_placement)-1]
+            self.merge.max_placement = int(max_placement)
+        
         card_images = self.control.get_cropped_images(screenshot, self.card_regions)
         cards = []
         for image in card_images:
@@ -414,5 +402,5 @@ class Game:
             return True
         return False
                   
-g = Game("./configs/mac_monitor_config.json", True)
+g = Game("./configs/mac_laptop_screen_config.json", True)
 g.train(10)
