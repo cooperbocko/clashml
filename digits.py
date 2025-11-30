@@ -49,9 +49,7 @@ class DetectDigits:
         digits = ''
         if self.is_roboflow:
             results = self.roboflow.infer(image, model_id='clash-digit-detection-zjhdw/5')['predictions']
-            print(results)
             sorted_predictions = sorted(results, key=lambda r: r['x'])
-            print(sorted_predictions)
             for prediction in sorted_predictions:
                 digits = digits + prediction['class']
         else:

@@ -60,6 +60,7 @@ class ImageMatch:
         if isinstance(image, str):
             image = Image.open(image)
             
+        image = image.resize((56, 70))
         img_color = image.convert("RGB")
         img_gray = ImageOps.grayscale(img_color).convert("RGB")
         
