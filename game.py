@@ -1,7 +1,6 @@
 import json
 from typing import Tuple
 import pyautogui
-from sklearn.metrics import multilabel_confusion_matrix
 from merge import Merge
 from control import Control
 from text_detect import TextDetect
@@ -14,6 +13,7 @@ import random
 import time
 from debug import Debug
 from digits import DetectDigits
+from datetime import datetime
 
 class Game:
     #actions
@@ -73,9 +73,9 @@ class Game:
         
         self.merge = Merge()
         self.debug = Debug(self.merge)
-        self.control = Control(self.left, self.top, self.right, self.bottom) #TODO: make config file give screen size/constatns
-        self.card_match = ImageMatch("card_match_db.npz", "images/cards") #TODO: make config file give screen size/constatns
-        self.level_match = ImageMatch("level_match_db.npz", "images/levels")
+        self.control = Control(self.left, self.top, self.right, self.bottom)
+        self.card_match = ImageMatch("card_match_db.npz", "images/cards", (56, 70)) 
+        self.level_match = ImageMatch("level_match_db.npz", "images/levels", (19, 18))
         self.text_detection = TextDetect()
         self.digit_model = DetectDigits(self.is_roboflow, "models/clash_digits_11.pt", self.env_path)
         self.gold_detection = YOLO("models/gold_circle_11.pt")
@@ -93,7 +93,7 @@ class Game:
         for i in range(n_games):
             print(f'Playing game {i}')
             #load time
-            time.sleep(10)
+            time.sleep(7)
             
             run = self.play_game()
             self.merge = Merge()
@@ -135,7 +135,10 @@ class Game:
         
         if self.debug_mode:
             print('Added: ', start_card)
+            print('At level: ', start_card_level)
             print('Entering game loop!\n')
+            self.debug.save_image(start_card_image, 'startcard', 'start')
+            self.debug.save_image(level_image, 'level', 'start')
         
         game_over = False
         while not game_over:
@@ -144,7 +147,12 @@ class Game:
             rewards = []
             next_states = []
             dones = []
+            
+            time1 = datetime.now()
             state = self.update_state()
+            time2 = datetime.now()
+            diff = time2 - time1
+            print(f'seconds: {diff.seconds}')
             
             if self.debug_mode:
                 self.debug.print_round_line()
@@ -180,6 +188,7 @@ class Game:
                 rewards.append(reward)
                 
                 if changed:
+                    time.sleep(1)
                     state = self.update_state()
                 else:
                     state = self.merge.get_state()

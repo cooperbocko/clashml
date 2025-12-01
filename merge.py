@@ -10,6 +10,7 @@ class Card:
     synergy2: int
     base_index: int
     is_frontline: bool
+    name: str
     
 @dataclass 
 class LeveledCard:
@@ -47,43 +48,43 @@ class Synergy(Enum):
 
 class Merge: 
     CARDS = {
-    'KNIGHT' : Card(2, Synergy.NOBEL, Synergy.JUGGERNAUT, 0, True),
-    'PRINCE' : Card(3, Synergy.NOBEL, Synergy.BRAWLER, 4, True),
-    'PRINCESS' : Card(4, Synergy.NOBEL, Synergy.BLASTER, 8, False),
-    'GOLDEN_KNIGHT' : Card(5, Synergy.NOBEL, Synergy.ASSASSIN, 12, True),
+    'KNIGHT' : Card(2, Synergy.NOBEL, Synergy.JUGGERNAUT, 0, True, 'Knight'),
+    'PRINCE' : Card(3, Synergy.NOBEL, Synergy.BRAWLER, 4, True, 'Prince'),
+    'PRINCESS' : Card(4, Synergy.NOBEL, Synergy.BLASTER, 8, False, 'Princess'),
+    'GOLDEN_KNIGHT' : Card(5, Synergy.NOBEL, Synergy.ASSASSIN, 12, True, 'Golden Knight'),
     
-    'ARCHER' : Card(2, Synergy.CLAN, Synergy.RANGER, 16, False),
-    'VALKYRIE' : Card(3, Synergy.CLAN, Synergy.BRUTALIST, 20, True),
-    'BARBARIAN' : Card(2, Synergy.CLAN, Synergy.BRAWLER, 24, True),
-    'ARCHER_QUEEN' : Card(5, Synergy.CLAN, Synergy.RANGER, 28, False),
+    'ARCHER' : Card(2, Synergy.CLAN, Synergy.RANGER, 16, False, 'Archer'),
+    'VALKYRIE' : Card(3, Synergy.CLAN, Synergy.BRUTALIST, 20, True, 'Valkyrie'),
+    'BARBARIAN' : Card(2, Synergy.CLAN, Synergy.BRAWLER, 24, True, 'Barbarian'),
+    'ARCHER_QUEEN' : Card(5, Synergy.CLAN, Synergy.RANGER, 28, False, 'Archer Queen'),
     
-    'DART_GOBLIN' : Card(3, Synergy.GOBLIN, Synergy.RANGER, 32, False),
-    'GOBLIN' : Card(2, Synergy.GOBLIN, Synergy.ASSASSIN, 36, True),
-    'SPEAR_GOBLIN' : Card(2, Synergy.GOBLIN, Synergy.BLASTER, 40, False),
-    'GOBLIN_MACHINE' : Card(4, Synergy.GOBLIN, Synergy.BRUTALIST, 44, True),
+    'DART_GOBLIN' : Card(3, Synergy.GOBLIN, Synergy.RANGER, 32, False, 'Dart Goblin'),
+    'GOBLIN' : Card(2, Synergy.GOBLIN, Synergy.ASSASSIN, 36, True, 'Goblin'),
+    'SPEAR_GOBLIN' : Card(2, Synergy.GOBLIN, Synergy.BLASTER, 40, False, 'Spear Goblin'),
+    'GOBLIN_MACHINE' : Card(4, Synergy.GOBLIN, Synergy.BRUTALIST, 44, True, 'Gobin Machine'),
     
-    'SKELETON_GIANT' : Card(3, Synergy.UNDEAD, Synergy.BRAWLER, 48, True),
-    'ROYAL_GHOST' : Card(4, Synergy.UNDEAD, Synergy.ASSASSIN, 52, True),
-    'SKELETON_BOMBER' : Card(2, Synergy.UNDEAD, Synergy.BLASTER, 56, False),
-    'SKELETON_KING' : Card(5, Synergy.UNDEAD, Synergy.BRUTALIST, 60, True),
+    'SKELETON_GIANT' : Card(3, Synergy.UNDEAD, Synergy.BRAWLER, 48, True, 'Skeleton Giant'),
+    'ROYAL_GHOST' : Card(4, Synergy.UNDEAD, Synergy.ASSASSIN, 52, True, 'Royal Ghost'),
+    'SKELETON_BOMBER' : Card(2, Synergy.UNDEAD, Synergy.BLASTER, 56, False, 'Skeleton Bomber'),
+    'SKELETON_KING' : Card(5, Synergy.UNDEAD, Synergy.BRUTALIST, 60, True, 'Skeleton King'),
     
-    'MEGA_KNIGHT' : Card(4, Synergy.ACE, Synergy.BRAWLER, 64, True),
-    'EXECUTIONER' : Card(3, Synergy.ACE, Synergy.BLASTER, 68, False),
-    'PEKKA' : Card(3, Synergy.PEKKA, Synergy.BRAWLER, 72, True),
-    'BANDIT' : Card(4, Synergy.ACE, Synergy.AVENGER, 76, True),
+    'MEGA_KNIGHT' : Card(4, Synergy.ACE, Synergy.BRAWLER, 64, True, 'Mega Knight'),
+    'EXECUTIONER' : Card(3, Synergy.ACE, Synergy.BLASTER, 68, False, 'Executioner'),
+    'PEKKA' : Card(3, Synergy.PEKKA, Synergy.BRAWLER, 72, True, 'Pekka'),
+    'BANDIT' : Card(4, Synergy.ACE, Synergy.AVENGER, 76, True, 'Bandit'),
     
-    'ELECTRO_GIANT': Card(3, Synergy.GIANT, Synergy.SUPERSTAR, 80, True),
-    'ELECTRO_WIZARD': Card(4, Synergy.ELECTRIC, Synergy.MAGE, 84, False),
-    'WIZARD': Card(2, Synergy.CLAN, Synergy.BLASTER, 88, False),
-    'BABY_DRAGON': Card(4, Synergy.FIRE, Synergy.BLASTER, 92, False),
+    'ELECTRO_GIANT': Card(3, Synergy.GIANT, Synergy.SUPERSTAR, 80, True, 'Eletro Giant'),
+    'ELECTRO_WIZARD': Card(4, Synergy.ELECTRIC, Synergy.MAGE, 84, False, 'Electro Wizard'),
+    'WIZARD': Card(2, Synergy.CLAN, Synergy.BLASTER, 88, False, 'Wizard'),
+    'BABY_DRAGON': Card(4, Synergy.FIRE, Synergy.BLASTER, 92, False, 'Baby Dragon'),
     
-    'WITCH': Card(4, Synergy.UNDEAD, Synergy.SUPERSTAR, 96, False),
-    'SKELETON_DRAGON': Card(2, Synergy.UNDEAD, Synergy.RANGER, 100, False),
-    'MUSKETEER': Card(3, Synergy.NOBEL, Synergy.SUPERSTAR, 104, False),
+    'WITCH': Card(4, Synergy.UNDEAD, Synergy.SUPERSTAR, 96, False, 'Witch'),
+    'SKELETON_DRAGON': Card(2, Synergy.UNDEAD, Synergy.RANGER, 100, False, 'Skeleton Dragon'),
+    'MUSKETEER': Card(3, Synergy.NOBEL, Synergy.SUPERSTAR, 104, False, 'Musketeer'),
     
-    'MINI_PEKKA': Card(2, Synergy.PEKKA, Synergy.BRUTALIST, 108, True),
-    'ROYAL_GIANT': Card(2, Synergy.GIANT, Synergy.RANGER, 112, False),
-    'MONK': Card(5, Synergy.ACE, Synergy.SUPERSTAR, 116, True)
+    'MINI_PEKKA': Card(2, Synergy.PEKKA, Synergy.BRUTALIST, 108, True, 'Mini Pekka'),
+    'ROYAL_GIANT': Card(2, Synergy.GIANT, Synergy.RANGER, 112, False, 'Royal Giant'),
+    'MONK': Card(5, Synergy.ACE, Synergy.SUPERSTAR, 116, True, 'Monk')
     }
     
     #consts
@@ -355,7 +356,7 @@ class Merge:
                 if cell == 0:  
                     row_str.append(' 0')
                 else:
-                    row_str.append(f'{str(cell.card.synergy1)} {str(cell.card.synergy2)}')
+                    row_str.append(f'{str(cell.card.name)} {str(cell.level)}')
             print(' '.join(row_str))
         print(']')
         
