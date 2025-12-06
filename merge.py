@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 from enum import Enum
-from typing import Tuple
+
 import numpy as np
 
 @dataclass(frozen=True)
@@ -102,7 +102,7 @@ class Merge:
         self.max_placement = 2
         self.syns = [0 for _ in range(self.N_SYNS)]
         
-    def buy_card(self, card_posiiton: int) -> Tuple[bool, int]:
+    def buy_card(self, card_posiiton: int) -> tuple[bool, int]:
         card = None
         for hand_card in self.hand:
             if hand_card != 0 and hand_card.hand_position == card_posiiton:
@@ -117,7 +117,7 @@ class Merge:
         
         return self.add_card(card)
     
-    def sell_card(self, row: int, col: int) -> Tuple[bool, int]:
+    def sell_card(self, row: int, col: int) -> tuple[bool, int]:
         if (row < 0 or row >= self.ROWS or col < 0 or col >= self.COLS):
             print("Not in bounds!")
             return (False, -1)
@@ -133,7 +133,7 @@ class Merge:
         _, reward = self.update_syns()
         return (True, reward)
     
-    def move_card(self, oldrow: int, oldcol: int, newrow: int, newcol: int) -> Tuple[bool, int]:
+    def move_card(self, oldrow: int, oldcol: int, newrow: int, newcol: int) -> tuple[bool, int]:
         if (oldrow < 0 or oldrow >= self.ROWS or oldcol < 0 or oldcol >= self.COLS or newrow < 0 or newrow >= self.ROWS or newcol < 0 or newcol >= self.COLS):
             print("Not in bounds!")
             return (False, -1)
@@ -161,7 +161,7 @@ class Merge:
         _, reward = self.update_syns()
         return (True, reward)
     
-    def add_card(self, card: Card) -> Tuple[bool, int]:
+    def add_card(self, card: Card) -> tuple[bool, int]:
         if(self.merge(card)):
             print("merged!")
             return (True, 3)
@@ -315,7 +315,7 @@ class Merge:
         self.current_cards[level_card.get_index()] = level_card
         return True
     
-    def update_syns(self) -> Tuple[bool, int]:
+    def update_syns(self) -> tuple[bool, int]:
         old_syns = self.syns.copy()
         
         self.syns = [0 for _ in range(self.N_SYNS)]
@@ -361,7 +361,7 @@ class Merge:
         print(']')
         
     #for simplicity of game actions
-    def move_to_front(self, old_row: int, old_col: int) -> Tuple[bool, int, int, int]:
+    def move_to_front(self, old_row: int, old_col: int) -> tuple[bool, int, int, int]:
         #find first open spot, if nothing is open just replace the first slot
         r, c = 0, 0
         for col in range(self.COLS):
@@ -372,7 +372,7 @@ class Merge:
         b, reward = self.move_card(old_row, old_col, r, c)
         return (b, r, c, reward)
     
-    def move_to_back(self, old_row: int, old_col: int) -> Tuple[bool, int, int, int]:
+    def move_to_back(self, old_row: int, old_col: int) -> tuple[bool, int, int, int]:
         #find first open spot, if nothing is open just replace the first slot
         r, c = self.ROWS-2, 0
         for col in range(self.COLS):
@@ -383,7 +383,7 @@ class Merge:
         b, reward = self.move_card(old_row, old_col, r, c)
         return (b, r, c, reward)
     
-    def move_to_bench(self, old_row: int, old_col: int) -> Tuple[bool, int, int, int]:
+    def move_to_bench(self, old_row: int, old_col: int) -> tuple[bool, int, int, int]:
         #find first open spot, if nothing is open just replace the first slot
         r, c = self.ROWS-1, 0
         for col in range(self.COLS):

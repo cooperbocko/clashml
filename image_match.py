@@ -1,5 +1,6 @@
 import os
 from typing import Tuple
+
 import torch
 import clip
 from PIL import Image, ImageOps

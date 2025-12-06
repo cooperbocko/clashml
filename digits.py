@@ -8,7 +8,7 @@ import cv2
 
 
 class DetectDigits:
-    def __init__(self, is_roboflow, model_path, env_path):
+    def __init__(self, is_roboflow: bool, model_path: str, env_path: str):
         load_dotenv(env_path)
         
         self.is_roboflow = is_roboflow
@@ -18,7 +18,7 @@ class DetectDigits:
             api_key=os.getenv("ROBOFLOW_API_KEY")
         )
         
-    def preprocess_image(self, image):
+    def preprocess_image(self, image: Image):
         # 1. Auto-Orient: Applied (using Pillow's ImageOps)
         # This reads the EXIF data and rotates the image if necessary.
         image = ImageOps.exif_transpose(image)
@@ -44,7 +44,7 @@ class DetectDigits:
         
         return processed_image
         
-    def predict(self, image):
+    def predict(self, image: Image) -> str:
         image = self.preprocess_image(image)
         digits = ''
         if self.is_roboflow:

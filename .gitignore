@@ -1,19 +1,16 @@
-#virtual environments
 .venv/
 
-#dotenv
+__pycache__/
+
 *.env
 
-#models for now
+
 models
 images
 runs
 logs
 debug
 
-roboflow.py
 
-*.jpg
-*.png
 
 

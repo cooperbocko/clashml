@@ -1,21 +1,23 @@
 import json
+import random
+import time
 from typing import Tuple
+
+import numpy as np
+from ultralytics import YOLO
+import torch
 import pyautogui
+
 from merge import Merge
 from control import Control
 from text_detect import TextDetect
 from image_match import ImageMatch
 from dqn import DQN, QTrainer, ReplayBuffer
-import numpy as np
-from ultralytics import YOLO
-import torch
-import random
-import time
 from debug import Debug
 from digits import DetectDigits
-from datetime import datetime
+from template import TemplateMatch
 
-class Game:
+class Agent:
     #actions
     NUM_HAND_SLOTS = 3
     NUM_BOARD_SLOTS = 25
@@ -58,6 +60,7 @@ class Game:
         self.defeated_region = self.regions["defeated_region"]
         self.play_again_region = self.regions["play_again_region"]
         self.ok_region = self.regions["ok_region"]
+        self.phase_region = [[164, 352, 196, 393]]
         
         self.click_points = self.config["click_points"]
         self.board = self.click_points["board"]
@@ -85,15 +88,21 @@ class Game:
         self.replay_buffer = ReplayBuffer()
         self.trainer = QTrainer(self.policy_net, self.target_net, self.replay_buffer, 1e-3, 0.99)
         self.e = self.EPSILON
+        self.phase_check = TemplateMatch(0.7, ['./images/phase/battle1/solid.png', 'images/phase/battle2/translucent.png'])
         
-    def train(self, n_games):
+    def train(self, n_games: int):
         best = float('-inf')
         self.control.click(self.battle)
         
         for i in range(n_games):
             print(f'Playing game {i}')
-            #load time
-            time.sleep(7)
+            
+            while True:
+                screenshot = self.control.screenshot()
+                phase = self.control.get_cropped_images(screenshot, self.phase_region)[0]
+                if self.phase_check.detect(phase):
+                    time.sleep(1)
+                    break
             
             run = self.play_game()
             self.merge = Merge()
@@ -113,7 +122,7 @@ class Game:
 
             self.control.click(self.play_again)
         
-    def play_game(self):
+    def play_game(self) -> float:
         total_reward = 0
         
         if self.debug_mode:
@@ -147,12 +156,7 @@ class Game:
             rewards = []
             next_states = []
             dones = []
-            
-            time1 = datetime.now()
             state = self.update_state()
-            time2 = datetime.now()
-            diff = time2 - time1
-            print(f'seconds: {diff.seconds}')
             
             if self.debug_mode:
                 self.debug.print_round_line()
@@ -195,30 +199,26 @@ class Game:
                 next_states.append(state)
                 dones.append(False)
                 
-                end = self.control.check_pixel(self.end_bar, self.is_mac_laptop_screen)
-                if self.debug_mode:
-                    self.debug.print_step()
-                    print('end: ', end)
-                    
-                if end[0] <= self.end_colors[0] + 20 and end[1] <= self.end_colors[1] + 20 and end[2] <= self.end_colors[2] + 20:
+                if self.check_end():
                     break
-            
-            #transition time
-            time.sleep(10)
 
+            while True:
+                screenshot = self.control.screenshot()
+                phase = self.control.get_cropped_images(screenshot, self.phase_region)[0]
+                if not self.phase_check.detect(phase):
+                    time.sleep(1)
+                    break
             if self.debug_mode:
                 print('Starting Battle Phase')
                 
-            not_end = True
-            while not_end: 
-                end = self.control.check_pixel(self.end_bar, self.is_mac_laptop_screen)
-                if self.debug_mode:
-                    print('end: ', end)
-                if end[0] <= self.end_colors[0] + 20 and end[1] <= self.end_colors[1] + 20 and end[2] <= self.end_colors[2] + 20:
-                    not_end = False
-                    time.sleep(5)
-                
+            while True: 
                 screenshot = self.control.screenshot()
+                
+                phase = self.control.get_cropped_images(screenshot, self.phase_region)[0]
+                if self.phase_check.detect(phase):
+                    time.sleep(1)
+                    break
+                
                 ok_image = np.array(self.control.get_cropped_images(screenshot, self.ok_region)[0])
                 play_again_image = np.array(self.control.get_cropped_images(screenshot, self.play_again_region)[0])
                 ok = self.text_detection.detect_text(ok_image)
@@ -252,8 +252,6 @@ class Game:
                 self.trainer.train_step(32)
                 
             self.replay_buffer.push(states, actions, rewards, next_states, dones)
-            #round transition time
-            time.sleep(2)
             
             if self.debug_mode:
                 self.debug.print_round()
@@ -338,7 +336,7 @@ class Game:
         
         return self.merge.get_state()
         
-    def do_action(self, action) -> Tuple[int, bool]:
+    def do_action(self, action: int) -> Tuple[int, bool]:
         action_name, position = self.decode_action(action)
         row = int(position / 5)
         col = position % 5
@@ -410,6 +408,14 @@ class Game:
                 self.recheck_board()
             return True
         return False
-                  
-g = Game("./configs/mac_laptop_screen_config.json", True)
-g.train(10)
+    
+    def check_end(self):
+        end = self.control.check_pixel(self.end_bar, self.is_mac_laptop_screen)
+        if self.debug_mode:
+            self.debug.print_step()
+            print('end: ', end)
+                    
+        if end[0] <= self.end_colors[0] + 20 and end[1] <= self.end_colors[1] + 20 and end[2] <= self.end_colors[2] + 20:
+            return True
+        else:
+            return False

@@ -1,5 +1,6 @@
-from image_match import ImageMatch
 from PIL import Image
+
+from image_match import ImageMatch
 
 cardmatch = ImageMatch('./card_match_db.npz', './images/cards')
 
