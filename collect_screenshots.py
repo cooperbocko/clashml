@@ -7,6 +7,7 @@ import os
 CARD_PICTURE_REGION = [(197, 143, 272, 237)]
 card_regions = [[81, 786, 153, 876], [162, 786, 234, 876], [243, 786, 313, 876]]
 phase_region = [[164, 352, 196, 393]]
+card_level_region = [[282, 157, 301, 174]]
 
 c = Control(8, 68, 423, 966)
 elixr = Control(315, 890, 365, 940)
@@ -37,7 +38,10 @@ def on_press():
         filename = f"screenshot_{datetime.now()}.png"
         path = 'images/game_screenshots'
         s = c.screenshot()
-        s.save(os.path.join(path, filename))
+        
+        level = c.get_cropped_images(s, card_level_region)[0]
+        
+        level.save(os.path.join(path, filename))
         
 def get_pics():
     path = './images/game_screenshots'
@@ -55,4 +59,4 @@ def get_pics():
                 x += 1
                 
                 
-get_pics()
+on_press()

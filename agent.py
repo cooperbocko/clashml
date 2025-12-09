@@ -4,7 +4,6 @@ import time
 from typing import Tuple
 
 import numpy as np
-from ultralytics import YOLO
 import torch
 import pyautogui
 
@@ -16,6 +15,7 @@ from dqn import DQN, QTrainer, ReplayBuffer
 from debug import Debug
 from digits import DetectDigits
 from template import TemplateMatch
+from gold import DetectGold
 
 class Agent:
     #actions
@@ -77,11 +77,11 @@ class Agent:
         self.merge = Merge()
         self.debug = Debug(self.merge)
         self.control = Control(self.left, self.top, self.right, self.bottom)
-        self.card_match = ImageMatch("card_match_db.npz", "images/cards", (56, 70)) 
-        self.level_match = ImageMatch("level_match_db.npz", "images/levels", (19, 18))
+        self.card_match = ImageMatch("card_match_db.npz", "images/cards", (56, 70), True) 
+        self.level_match = ImageMatch("level_match_db.npz", "images/levels", (19, 18), False)
         self.text_detection = TextDetect()
         self.digit_model = DetectDigits(self.is_roboflow, "models/clash_digits_11.pt", self.env_path)
-        self.gold_detection = YOLO("models/gold_circle_11.pt")
+        self.gold_detection = DetectGold(self.is_roboflow, "models/gold_circle_11.pt", self.env_path)
         self.policy_net = DQN(len(self.merge.get_state()), 128, self.TOTAL_ACTIONS)
         self.target_net = DQN(len(self.merge.get_state()), 128, self.TOTAL_ACTIONS)
         self.target_net.load_state_dict(self.policy_net.state_dict())
@@ -394,19 +394,35 @@ class Agent:
     def gold_check(self):
         screenshot = self.control.screenshot()
         
-        gold_results = self.gold_detection.predict(source=screenshot, verbose=False)[0]
-        if len(gold_results.boxes) > 0:
-            print('Detected gold circle(s)!')
-            for box in gold_results.boxes.xyxy.cpu().numpy():
-                x1, y1, x2, y2 = box.astype(int)
-                x = int((x1 + x2)/2)
-                y = int((y1 + y2)/2)
-                point = (self.left + x, self.top + y)
-                print(f'Clicking: x:{x} y:{y}')
-                self.control.click(point)
-                time.sleep(3)
-                self.recheck_board()
-            return True
+        gold_results = self.gold_detection.predict(screenshot)
+        if self.is_roboflow:
+            if len(gold_results) > 0:
+                for prediction in gold_results:
+                    x = prediction['x']
+                    y = prediction['y']
+                    width = prediction['width']
+                    height = prediction['height']
+                    
+                    point = (x + width/2, y + height/2)
+                    print(f'Clicking: x:{x} y:{y}')
+                    self.control.click(point)
+                    time.sleep(1)
+                    self.recheck_board()
+                return True
+        else: 
+            if len(gold_results.boxes) > 0:
+                print('Detected gold circle(s)!')
+                for box in gold_results.boxes.xyxy.cpu().numpy():
+                    x1, y1, x2, y2 = box.astype(int)
+                    x = int((x1 + x2)/2)
+                    y = int((y1 + y2)/2)
+                    point = (self.left + x, self.top + y)
+                    print(f'Clicking: x:{x} y:{y}')
+                    self.control.click(point)
+                    time.sleep(1)
+                    self.recheck_board()
+                return True
+            
         return False
     
     def check_end(self):
