@@ -156,11 +156,14 @@ class Agent:
             rewards = []
             next_states = []
             dones = []
-            state = self.update_state()
+            state = []
             
             if self.debug_mode:
                 self.debug.print_round_line()
                 print('Starting Deploy phase!')
+                
+            self.gold_check()
+            state = self.update_state()
                 
             while True: 
                 if self.debug_mode:
@@ -168,8 +171,6 @@ class Agent:
                     print('Map before action:')
                     self.merge.print_map()
                 
-                if self.gold_check():
-                    state = self.update_state()
                 states.append(state)
                 
                 if random.random() < self.e:
@@ -191,7 +192,7 @@ class Agent:
                 total_reward += reward
                 rewards.append(reward)
                 
-                if changed:
+                if changed or self.merge.elixir == -1:
                     time.sleep(1)
                     state = self.update_state()
                 else:
@@ -284,6 +285,10 @@ class Agent:
                 card = self.card_match.match(card_image)
                 level_image = pyautogui.screenshot(region=(self.card_level_region[0][0], self.card_level_region[0][1], self.card_level_region[0][2] - self.card_level_region[0][0], self.card_level_region[0][3] - self.card_level_region[0][1]))
                 level = int(self.level_match.match(level_image))
+                
+                if self.debug_mode:
+                    self.debug.save_image(level_image, 'level', 'gold_check')
+                
                 if prev == 0:
                     if card == 'no_card':
                         #do nothing
@@ -311,6 +316,8 @@ class Agent:
         elixr = self.digit_model.predict(elixr_img)
         if len(elixr) > 0:
             self.merge.elixir = int(elixr)
+        else:
+            self.merge.elixir = -1
         
         max_placement_img = self.control.get_cropped_images(screenshot, self.placement_region)[0]
         max_placement = self.digit_model.predict(max_placement_img)
@@ -402,10 +409,11 @@ class Agent:
                     y = prediction['y']
                     width = prediction['width']
                     height = prediction['height']
-                    
-                    point = (x + width/2, y + height/2)
+                    print(f'x: {x}, y: {y}, width: {width}, height: {height}')
+                    x = int(self.left + x + width/2)
+                    y = int(self.top + y + height/2)
                     print(f'Clicking: x:{x} y:{y}')
-                    self.control.click(point)
+                    self.control.click((x,y))
                     time.sleep(1)
                     self.recheck_board()
                 return True
@@ -414,15 +422,13 @@ class Agent:
                 print('Detected gold circle(s)!')
                 for box in gold_results.boxes.xyxy.cpu().numpy():
                     x1, y1, x2, y2 = box.astype(int)
-                    x = int((x1 + x2)/2)
-                    y = int((y1 + y2)/2)
-                    point = (self.left + x, self.top + y)
+                    x = int((x1 + x2)/2) + self.left
+                    y = int((y1 + y2)/2) + self.top
                     print(f'Clicking: x:{x} y:{y}')
-                    self.control.click(point)
+                    self.control.click((x,y))
                     time.sleep(1)
                     self.recheck_board()
                 return True
-            
         return False
     
     def check_end(self):

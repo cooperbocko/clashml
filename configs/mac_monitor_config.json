@@ -21,7 +21,7 @@
         "elixr_region": [[330, 822, 375, 872]],
         "placement_region": [[199, 352, 257, 392]],
         "card_picture_region": [[197, 141, 272, 234]],
-        "card_level_region": [[282, 157, 301, 174]],
+        "card_level_region": [[283, 157, 302, 174]],
         "defeated_region": [[152, 143, 263, 165]],
         "play_again_region": [[28, 795, 200, 854]],
         "ok_region": [[212, 795, 384, 854]]

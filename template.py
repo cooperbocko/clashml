@@ -18,7 +18,6 @@ class TemplateMatch:
     def detect(self, screenshot: Image) -> bool:
         screenshot = np.array(screenshot)
         screenshot = cv2.cvtColor(screenshot, cv2.COLOR_BGR2GRAY)
-        
         for template in self.templates:
             result = cv2.matchTemplate(screenshot, template, cv2.TM_CCOEFF_NORMED)
             minv, maxv, minl, maxl = cv2.minMaxLoc(result)

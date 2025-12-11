@@ -1,9 +1,14 @@
-from PIL import Image
+from control import Control
+from template import TemplateMatch
+import cv2
 
-from image_match import ImageMatch
 
-cardmatch = ImageMatch('./card_match_db.npz', './images/cards')
+level1_check = TemplateMatch(0.99, ['./images/level_template/level1.png'], False)
+level2_check = TemplateMatch(0.99, ['./images/level_template/level2.png'], False)
+level3_check = TemplateMatch(0.99, ['./images/level_template/level3.png'], False)
 
-card = Image.open('./debug/1/2/battle/cards_10_2025-11-30 12:47:08.354576.png')
+image = cv2.imread('debug/0/0/start/level_0_2025-12-10 12:37:41.119183.png')
 
-print(cardmatch.match(card))
+print(level1_check.detect(image))
+print(level2_check.detect(image))
+print(level3_check.detect(image))
