@@ -11,13 +11,13 @@ class Control:
         self.bottom = bottom
         
     def click(self, point: list[int]):
-        pyautogui.moveTo(point[0], point[1])
+        pyautogui.moveTo(point[0] + self.left, point[1] + self.top)
         pyautogui.click()
         
     def drag(self, start_point: list[int], end_point: list[int]):
-        pyautogui.moveTo(start_point[0], start_point[1])
+        pyautogui.moveTo(start_point[0] + self.left, start_point[1] + self.top)
         pyautogui.mouseDown()
-        pyautogui.moveTo(end_point[0], end_point[1])
+        pyautogui.moveTo(end_point[0] + self.left, end_point[1] + self.top)
         pyautogui.mouseUp()
             
     def screenshot(self) -> Image:
@@ -27,6 +27,8 @@ class Control:
     
     def check_pixel(self, point: list[int], is_mac_laptop_screen:bool = False) -> tuple[int, int, int]:
         x, y = point
+        x = x + self.left
+        y = y + self.top
         if is_mac_laptop_screen:
             x = x * 2
             y = y * 2
@@ -49,6 +51,7 @@ class Control:
             cropped_images.append(crop)
         return cropped_images
     
+    #For checking coordinates inside of game screen
     def check_window_bounds(self):
         print("Move your mouse around. Press Ctrl+C to stop.")
 
@@ -60,6 +63,7 @@ class Control:
         except KeyboardInterrupt:
             print("\nDone.")
             
+    #For checking coordiantes on your actual screen        
     @staticmethod
     def check_screen_bounds(is_mac_laptop_screen):
         print("Move your mouse around. Press Ctrl+C to stop.")
