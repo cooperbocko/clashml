@@ -24,7 +24,8 @@
         "card_level_region": [[283, 157, 302, 174]],
         "defeated_region": [[152, 143, 263, 165]],
         "play_again_region": [[28, 795, 200, 854]],
-        "ok_region": [[212, 795, 384, 854]]
+        "ok_region": [[212, 795, 384, 854]],
+        "phase_region": [[164, 352, 196, 393]]
     },
 
     "click_points": {

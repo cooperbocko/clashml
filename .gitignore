@@ -1,15 +1,14 @@
 .venv/
 __pycache__/
 
-*.env
-*.npz
+secret.env
 
-
-models
-images
 runs
 logs
 debug
+
+images/game_screenshots
+images/raw_cards
 
 
 

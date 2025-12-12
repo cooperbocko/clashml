@@ -60,7 +60,7 @@ class Agent:
         self.defeated_region = self.regions["defeated_region"]
         self.play_again_region = self.regions["play_again_region"]
         self.ok_region = self.regions["ok_region"]
-        self.phase_region = [[164, 352, 196, 393]]
+        self.phase_region = self.regions["phase_region"]
         
         self.click_points = self.config["click_points"]
         self.board = self.click_points["board"]

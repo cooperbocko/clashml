@@ -153,18 +153,82 @@ To get a local copy up and running follow these simple example steps.
 5. Create your config file
 
     1. Open `example_config.json`
-    2. Run the setup script `setup_helper.py`
-    3. Get Left, Top, Right, and Bottom coordinates
-    insert screen shot
+    2. Use the setup script `setup_helper.py` to show cursor coordinates for the points and regions you will be marking. 
+    3. Get Left(x1), Top(y1), Right(x2), and Bottom(y2) coordinates of your emulator screen. It does not have to be perfect but make sure to not cut off any of the screen.
     ```sh
     "screen_bounds": {
-        "left": left_coordinate,
-        "top": top_coordinate,
-        "right": right_coordiante,
-        "bottom": bottom_coordinate
+        "left": x1,
+        "top": y1,
+        "right": x2,
+        "bottom": y2
     },
     ```
+      <img src="./images/readme/screen_bounds.png" alt="Screen Bounds Image" width="200" height="400">
 
+      (For the rest of the setup images, a circle will denote just a point (x, y) while a square border will denote a region (x1, y1, x2, y2))
+
+    4. Navigate to the main menu and run the `check_window_bounds()` in the `setup_helper.py` file to get the coordinates for the battle button.
+    ```sh
+    "battle": [x, y],
+    ```
+      <img src="./images/readme/battle_point.png" alt="Battle Point Image" width="200" height="400">
+
+    5. Navigate to the main battle screen and get the points and regions for the variables below. Continue to use the `check_window_bounds()` in the `setup_helper.py` to mark points and regions.
+    ```sh
+    "card_regions": [
+            [x1, y1, x2, y2],
+            [x1, y1, x2, y2],
+            [x1, y1, x2, y2]
+        ],
+        "elixr_region": [[x1, y1, x2, y2]],
+        "placement_region": [[x1, y1, x2, y2]],
+        ...,
+        "phase_region": [[x1, y1, x2, y2]]
+    ...
+    "board": [
+            [[x1, y1], [x1, y1], [x1, y1], [x1, y1], [x1, y1]],
+            [[x1, y1], [x1, y1], [x1, y1], [x1, y1], [x1, y1]],
+            [[x1, y1], [x1, y1], [x1, y1], [x1, y1], [x1, y1]],
+            [[x1, y1], [x1, y1], [x1, y1], [x1, y1], [x1, y1]],
+            [[x1, y1], [x1, y1], [x1, y1], [x1, y1], [x1, y1]]
+        ],
+        "hand": [
+            [x1, y1],
+            [x1, y1],
+            [x1, y1]
+        ],
+        ...
+        "safe_click": [x1, y1],
+        "end_bar": [x1, y1],
+    ```
+      <img src="./images/readme/battle_screen.png" alt="Battle Point Image" width="200" height="400">
+
+    6. In the main battle screen click a troop to navigate to the card image and level screen and get the coordinates and regions for the variables below. Continue to use the `check_window_bounds()` in the `setup_helper.py` to mark points and regions.
+    ```sh
+    "card_picture_region": [[x1, y1, x2, y2]],
+    "card_level_region": [[x1, y1, x2, y2]],
+    ```
+      <img src="./images/readme/card_image.png" alt="Battle Point Image" width="200" height="400">
+
+    7. At the end of the game, navigate to the end screen and get the coordianates and regions for the variables below. Continue to use the `check_window_bounds()` in the `setup_helper.py` to mark points and regions.
+    ```sh
+    "defeated_region": [[x1, y1, x2, y2]],
+    "play_again_region": [[x1, y1, x2, y2]],
+    "ok_region": [[x1, y1, x2, y2]],
+    ...
+    "play_again": [x1, y1],
+    "ok": [x1, y1]
+    ```
+      <img src="./images/readme/defeated_screen.png" alt="Battle Point Image" width="200" height="400">
+
+6. Update the system settings in your config file. `is_mac_laptop_screen` is true if you are on a mac laptop and the emulator is on the laptop screen. `is_roboflow` is true if you are using roboflow instead of running detection models locally. Using roboflow is recommended for now as the local detection is not as accurate. `env_path` is just the path to your .env file you renamed in step 4.
+  ```sh
+  "system_settings": {
+        "is_mac_laptop_screen": true,
+        "is_roboflow": true,
+        "env_path": "./example.env"
+    },
+  ```
 5. Change git remote url to avoid accidental pushes to base project
    ```sh
    git remote set-url origin cooperbocko/clashml
