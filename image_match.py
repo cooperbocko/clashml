@@ -1,4 +1,6 @@
 import os
+from typing import Tuple
+
 import torch
 import clip
 from PIL import Image, ImageOps
@@ -7,11 +9,13 @@ from sklearn.metrics.pairwise import cosine_similarity
 
 class ImageMatch:
     
-    def __init__(self, db_path: str, images_path: str):
+    def __init__(self, db_path: str, images_path: str, resize: Tuple[int, int], gray: bool):
         self.device = "cuda" if torch.cuda.is_available() else "cpu"
         self.model, self.preprocess = clip.load("ViT-B/32", device=self.device)
         self.db_path = db_path
         self.images_path = images_path
+        self.resize = resize
+        self.gray = gray
         self.db = None
         
         if os.path.exists(db_path):
@@ -60,10 +64,15 @@ class ImageMatch:
         if isinstance(image, str):
             image = Image.open(image)
             
+        imgs = []
+        image = image.resize(self.resize)
         img_color = image.convert("RGB")
-        img_gray = ImageOps.grayscale(img_color).convert("RGB")
-        
-        imgs = [img_color, img_gray]
+        if self.gray:
+            img_gray = ImageOps.grayscale(img_color).convert("RGB")
+            imgs = [img_color, img_gray]
+        else:
+            imgs = [img_color]
+            
         embs = []
         for im in imgs:
             inp = self.preprocess(im).unsqueeze(0).to(self.device)

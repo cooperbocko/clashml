@@ -1,17 +1,14 @@
-from merge import Merge
-
-ROWS = 5
-COLS = 5
-
-game = Merge()
-game.max_placement = 2
-game.elixir = 4
-game.add_starting_card('SPEAR_GOBLIN', 1)
-game.update_hand('SPEAR_GOBLIN', 'GOLDEN_KNIGHT', 'PRINCE')
-game.buy_card(0)
-row, col = 3, 2
-print(game.move_to_back(3, 2))
-#game.move_card(3, 2, 3, 0)
+from control import Control
+from template import TemplateMatch
+import cv2
 
 
-game.print_map()
+level1_check = TemplateMatch(0.99, ['./images/level_template/level1.png'], False)
+level2_check = TemplateMatch(0.99, ['./images/level_template/level2.png'], False)
+level3_check = TemplateMatch(0.99, ['./images/level_template/level3.png'], False)
+
+image = cv2.imread('debug/0/0/start/level_0_2025-12-10 12:37:41.119183.png')
+
+print(level1_check.detect(image))
+print(level2_check.detect(image))
+print(level3_check.detect(image))

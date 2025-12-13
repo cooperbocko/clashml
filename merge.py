@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 from enum import Enum
-from typing import Tuple
+
 import numpy as np
 
 @dataclass(frozen=True)
@@ -10,6 +10,7 @@ class Card:
     synergy2: int
     base_index: int
     is_frontline: bool
+    name: str
     
 @dataclass 
 class LeveledCard:
@@ -40,42 +41,50 @@ class Synergy(Enum):
     MAGE = 11
     ELECTRIC = 12
     FIRE = 13
+    GIANT = 14
+    PEKKA = 15
+    BRUTALIST = 16
+    SUPERSTAR = 17
 
 class Merge: 
     CARDS = {
-    'KNIGHT' : Card(2, Synergy.NOBEL, Synergy.JUGGERNAUT, 0, True),
-    'PRINCE' : Card(3, Synergy.NOBEL, Synergy.BRAWLER, 4, True),
-    'PRINCESS' : Card(4, Synergy.NOBEL, Synergy.RANGER, 8, False),
-    'GOLDEN_KNIGHT' : Card(5, Synergy.NOBEL, Synergy.ASSASSIN, 12, True),
+    'KNIGHT' : Card(2, Synergy.NOBEL, Synergy.JUGGERNAUT, 0, True, 'Knight'),
+    'PRINCE' : Card(3, Synergy.NOBEL, Synergy.BRAWLER, 4, True, 'Prince'),
+    'PRINCESS' : Card(4, Synergy.NOBEL, Synergy.BLASTER, 8, False, 'Princess'),
+    'GOLDEN_KNIGHT' : Card(5, Synergy.NOBEL, Synergy.ASSASSIN, 12, True, 'Golden Knight'),
     
-    'ARCHER' : Card(2, Synergy.CLAN, Synergy.RANGER, 16, False),
-    'VALKYRIE' : Card(3, Synergy.CLAN, Synergy.AVENGER, 20, True),
-    'BARBARIAN' : Card(2, Synergy.CLAN, Synergy.BRAWLER, 24, True),
-    'ARCHER_QUEEN' : Card(5, Synergy.CLAN, Synergy.AVENGER, 28, False),
+    'ARCHER' : Card(2, Synergy.CLAN, Synergy.RANGER, 16, False, 'Archer'),
+    'VALKYRIE' : Card(3, Synergy.CLAN, Synergy.BRUTALIST, 20, True, 'Valkyrie'),
+    'BARBARIAN' : Card(2, Synergy.CLAN, Synergy.BRAWLER, 24, True, 'Barbarian'),
+    'ARCHER_QUEEN' : Card(5, Synergy.CLAN, Synergy.RANGER, 28, False, 'Archer Queen'),
     
-    'DART_GOBLIN' : Card(3, Synergy.GOBLIN, Synergy.RANGER, 32, False),
-    'GOBLIN' : Card(2, Synergy.GOBLIN, Synergy.ASSASSIN, 36, True),
-    'SPEAR_GOBLIN' : Card(2, Synergy.GOBLIN, Synergy.BLASTER, 40, False),
-    'GOBLIN_MACHINE' : Card(4, Synergy.GOBLIN, Synergy.JUGGERNAUT, 44, True),
+    'DART_GOBLIN' : Card(3, Synergy.GOBLIN, Synergy.RANGER, 32, False, 'Dart Goblin'),
+    'GOBLIN' : Card(2, Synergy.GOBLIN, Synergy.ASSASSIN, 36, True, 'Goblin'),
+    'SPEAR_GOBLIN' : Card(2, Synergy.GOBLIN, Synergy.BLASTER, 40, False, 'Spear Goblin'),
+    'GOBLIN_MACHINE' : Card(4, Synergy.GOBLIN, Synergy.BRUTALIST, 44, True, 'Gobin Machine'),
     
-    'SKELETON_GIANT' : Card(3, Synergy.UNDEAD, Synergy.BRAWLER, 48, True),
-    'ROYAL_GHOST' : Card(4, Synergy.UNDEAD, Synergy.ASSASSIN, 52, True),
-    'SKELETON_BOMBER' : Card(2, Synergy.UNDEAD, Synergy.BLASTER, 56, False),
-    'SKELETON_KING' : Card(5, Synergy.UNDEAD, Synergy.JUGGERNAUT, 60, True),
+    'SKELETON_GIANT' : Card(3, Synergy.UNDEAD, Synergy.BRAWLER, 48, True, 'Skeleton Giant'),
+    'ROYAL_GHOST' : Card(4, Synergy.UNDEAD, Synergy.ASSASSIN, 52, True, 'Royal Ghost'),
+    'SKELETON_BOMBER' : Card(2, Synergy.UNDEAD, Synergy.BLASTER, 56, False, 'Skeleton Bomber'),
+    'SKELETON_KING' : Card(5, Synergy.UNDEAD, Synergy.BRUTALIST, 60, True, 'Skeleton King'),
     
-    'MEGA_KNIGHT' : Card(4, Synergy.ACE, Synergy.BRAWLER, 64, True),
-    'EXECUTIONER' : Card(3, Synergy.ACE, Synergy.BLASTER, 68, False),
-    'PEKKA' : Card(3, Synergy.ACE, Synergy.JUGGERNAUT, 72, True),
-    'BANDIT' : Card(4, Synergy.ACE, Synergy.AVENGER, 76, True),
+    'MEGA_KNIGHT' : Card(4, Synergy.ACE, Synergy.BRAWLER, 64, True, 'Mega Knight'),
+    'EXECUTIONER' : Card(3, Synergy.ACE, Synergy.BLASTER, 68, False, 'Executioner'),
+    'PEKKA' : Card(3, Synergy.PEKKA, Synergy.BRAWLER, 72, True, 'Pekka'),
+    'BANDIT' : Card(4, Synergy.ACE, Synergy.AVENGER, 76, True, 'Bandit'),
     
-    'ELECTRO_GIANT': Card(3, Synergy.ELECTRIC, Synergy.AVENGER, 80, True),
-    'ELECTRO_WIZARD': Card(4, Synergy.ELECTRIC, Synergy.MAGE, 84, False),
-    'WIZARD': Card(2, Synergy.FIRE, Synergy.MAGE, 88, False),
-    'BABY_DRAGON': Card(4, Synergy.FIRE, Synergy.BLASTER, 92, False),
+    'ELECTRO_GIANT': Card(3, Synergy.GIANT, Synergy.SUPERSTAR, 80, True, 'Eletro Giant'),
+    'ELECTRO_WIZARD': Card(4, Synergy.ELECTRIC, Synergy.MAGE, 84, False, 'Electro Wizard'),
+    'WIZARD': Card(2, Synergy.CLAN, Synergy.BLASTER, 88, False, 'Wizard'),
+    'BABY_DRAGON': Card(4, Synergy.FIRE, Synergy.BLASTER, 92, False, 'Baby Dragon'),
     
-    'WITCH': Card(4, Synergy.UNDEAD, Synergy.AVENGER, 96, False),
-    'SKELETON_DRAGON': Card(2, Synergy.UNDEAD, Synergy.RANGER, 100, False),
-    'MUSKETEER': Card(3, Synergy.NOBEL, Synergy.BLASTER, 104, False)
+    'WITCH': Card(4, Synergy.UNDEAD, Synergy.SUPERSTAR, 96, False, 'Witch'),
+    'SKELETON_DRAGON': Card(2, Synergy.UNDEAD, Synergy.RANGER, 100, False, 'Skeleton Dragon'),
+    'MUSKETEER': Card(3, Synergy.NOBEL, Synergy.SUPERSTAR, 104, False, 'Musketeer'),
+    
+    'MINI_PEKKA': Card(2, Synergy.PEKKA, Synergy.BRUTALIST, 108, True, 'Mini Pekka'),
+    'ROYAL_GIANT': Card(2, Synergy.GIANT, Synergy.RANGER, 112, False, 'Royal Giant'),
+    'MONK': Card(5, Synergy.ACE, Synergy.SUPERSTAR, 116, True, 'Monk')
     }
     
     #consts
@@ -93,7 +102,7 @@ class Merge:
         self.max_placement = 2
         self.syns = [0 for _ in range(self.N_SYNS)]
         
-    def buy_card(self, card_posiiton: int) -> Tuple[bool, int]:
+    def buy_card(self, card_posiiton: int) -> tuple[bool, int]:
         card = None
         for hand_card in self.hand:
             if hand_card != 0 and hand_card.hand_position == card_posiiton:
@@ -108,7 +117,7 @@ class Merge:
         
         return self.add_card(card)
     
-    def sell_card(self, row: int, col: int) -> Tuple[bool, int]:
+    def sell_card(self, row: int, col: int) -> tuple[bool, int]:
         if (row < 0 or row >= self.ROWS or col < 0 or col >= self.COLS):
             print("Not in bounds!")
             return (False, -1)
@@ -124,7 +133,7 @@ class Merge:
         _, reward = self.update_syns()
         return (True, reward)
     
-    def move_card(self, oldrow: int, oldcol: int, newrow: int, newcol: int) -> Tuple[bool, int]:
+    def move_card(self, oldrow: int, oldcol: int, newrow: int, newcol: int) -> tuple[bool, int]:
         if (oldrow < 0 or oldrow >= self.ROWS or oldcol < 0 or oldcol >= self.COLS or newrow < 0 or newrow >= self.ROWS or newcol < 0 or newcol >= self.COLS):
             print("Not in bounds!")
             return (False, -1)
@@ -152,7 +161,7 @@ class Merge:
         _, reward = self.update_syns()
         return (True, reward)
     
-    def add_card(self, card: Card) -> Tuple[bool, int]:
+    def add_card(self, card: Card) -> tuple[bool, int]:
         if(self.merge(card)):
             print("merged!")
             return (True, 3)
@@ -306,7 +315,7 @@ class Merge:
         self.current_cards[level_card.get_index()] = level_card
         return True
     
-    def update_syns(self) -> Tuple[bool, int]:
+    def update_syns(self) -> tuple[bool, int]:
         old_syns = self.syns.copy()
         
         self.syns = [0 for _ in range(self.N_SYNS)]
@@ -347,12 +356,12 @@ class Merge:
                 if cell == 0:  
                     row_str.append(' 0')
                 else:
-                    row_str.append(f'{str(cell.card.synergy1)} {str(cell.card.synergy2)}')
+                    row_str.append(f'{str(cell.card.name)} {str(cell.level)}')
             print(' '.join(row_str))
         print(']')
         
     #for simplicity of game actions
-    def move_to_front(self, old_row: int, old_col: int) -> Tuple[bool, int, int, int]:
+    def move_to_front(self, old_row: int, old_col: int) -> tuple[bool, int, int, int]:
         #find first open spot, if nothing is open just replace the first slot
         r, c = 0, 0
         for col in range(self.COLS):
@@ -363,7 +372,7 @@ class Merge:
         b, reward = self.move_card(old_row, old_col, r, c)
         return (b, r, c, reward)
     
-    def move_to_back(self, old_row: int, old_col: int) -> Tuple[bool, int, int, int]:
+    def move_to_back(self, old_row: int, old_col: int) -> tuple[bool, int, int, int]:
         #find first open spot, if nothing is open just replace the first slot
         r, c = self.ROWS-2, 0
         for col in range(self.COLS):
@@ -374,7 +383,7 @@ class Merge:
         b, reward = self.move_card(old_row, old_col, r, c)
         return (b, r, c, reward)
     
-    def move_to_bench(self, old_row: int, old_col: int) -> Tuple[bool, int, int, int]:
+    def move_to_bench(self, old_row: int, old_col: int) -> tuple[bool, int, int, int]:
         #find first open spot, if nothing is open just replace the first slot
         r, c = self.ROWS-1, 0
         for col in range(self.COLS):

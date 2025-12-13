@@ -1,7 +1,6 @@
 from PIL import Image
 import pyautogui
 import time
-from typing import List, Tuple
 
 class Control:
     
@@ -11,14 +10,14 @@ class Control:
         self.right = right
         self.bottom = bottom
         
-    def click(self, point: List[int]):
-        pyautogui.moveTo(point[0], point[1])
+    def click(self, point: list[int]):
+        pyautogui.moveTo(point[0] + self.left, point[1] + self.top)
         pyautogui.click()
         
-    def drag(self, start_point: List[int], end_point: List[int]):
-        pyautogui.moveTo(start_point[0], start_point[1])
+    def drag(self, start_point: list[int], end_point: list[int]):
+        pyautogui.moveTo(start_point[0] + self.left, start_point[1] + self.top)
         pyautogui.mouseDown()
-        pyautogui.moveTo(end_point[0], end_point[1])
+        pyautogui.moveTo(end_point[0] + self.left, end_point[1] + self.top)
         pyautogui.mouseUp()
             
     def screenshot(self) -> Image:
@@ -26,15 +25,17 @@ class Control:
         screenshot = pyautogui.screenshot(region = region)
         return screenshot
     
-    def check_pixel(self, point: List[int], is_mac_laptop_screen:bool = False) -> Tuple[int, int, int]:
+    def check_pixel(self, point: list[int], is_mac_laptop_screen:bool = False) -> tuple[int, int, int]:
         x, y = point
+        x = x + self.left
+        y = y + self.top
         if is_mac_laptop_screen:
             x = x * 2
             y = y * 2
         
         return pyautogui.pixel(x, y)
     
-    def get_cropped_images(self, screenshot: Image, regions: List[List[int]]) -> list[Image]:
+    def get_cropped_images(self, screenshot: Image, regions: list[list[int]]) -> list[Image]:
         cropped_images = []
         for region in regions:
             crop = screenshot.crop(region)
@@ -50,6 +51,7 @@ class Control:
             cropped_images.append(crop)
         return cropped_images
     
+    #For checking coordinates inside of game screen
     def check_window_bounds(self):
         print("Move your mouse around. Press Ctrl+C to stop.")
 
@@ -61,14 +63,18 @@ class Control:
         except KeyboardInterrupt:
             print("\nDone.")
             
+    #For checking coordiantes on your actual screen        
     @staticmethod
-    def check_screen_bounds():
+    def check_screen_bounds(is_mac_laptop_screen):
         print("Move your mouse around. Press Ctrl+C to stop.")
 
         try:
             while True:
                 x, y = pyautogui.position()
-                color = pyautogui.pixel(x * 2, y * 2)
+                if is_mac_laptop_screen:
+                    color = pyautogui.pixel(x * 2, y * 2)
+                else:
+                    color = pyautogui.pixel(x, y)
                 print(f"Mouse position: ({x}, {y}) {color}", end='\r')  # Overwrites the line
                 time.sleep(0.5)
         except KeyboardInterrupt:
