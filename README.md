@@ -147,7 +147,7 @@ To get a local copy up and running follow these simple example steps.
    pip install requirements.txt
    ```
 4. Enter your API in `example.env`. Rename it and add it to your `.gitignore`
-   ```js
+   ```
    ROBOFLOW_API_KEY = 'ENTER YOUR API';
    ```
 5. Create your config file
@@ -167,13 +167,18 @@ To get a local copy up and running follow these simple example steps.
 
       (For the rest of the setup images, a circle will denote just a point (x, y) while a square border will denote a region (x1, y1, x2, y2))
 
-    4. Navigate to the main menu and run the `check_window_bounds()` in the `setup_helper.py` file to get the coordinates for the battle button.
+    4. For the following steps, use the `on_press()` function to take screenshots of the screens, then use an image editor to see the exact coordiantes of the screenshot you need. I like to use the cropping feature which will then show you the new image size, like 640x640, which also servers as your x and y coordiantes.
+    Also, you should take screenshots of all the revelvant screens first and then go back fill out your config file.
+    
+    5. Naviagte to the main menu screen and take a screenshot. Then get the points for the variables below.
     ```sh
     "battle": [x, y],
+    ...
+    "menu_safe_click": [538, 684]
     ```
       <img src="./images/readme/battle_point.png" alt="Battle Point Image" width="200" height="400">
 
-    5. Navigate to the main battle screen and get the points and regions for the variables below. Continue to use the `check_window_bounds()` in the `setup_helper.py` to mark points and regions.
+    6. Navigate to the main battle screen, take a screenshot, and get the points and regions for the variables below. 
     ```sh
     "card_regions": [
             [x1, y1, x2, y2],
@@ -203,14 +208,14 @@ To get a local copy up and running follow these simple example steps.
     ```
       <img src="./images/readme/battle_screen.png" alt="Battle Point Image" width="200" height="400">
 
-    6. In the main battle screen click a troop to navigate to the card image and level screen and get the coordinates and regions for the variables below. Continue to use the `check_window_bounds()` in the `setup_helper.py` to mark points and regions.
+    7. In the main battle screen click a troop to navigate to the card image and level screen and take a screenshot. Next get the coordinates and regions for the variables below. 
     ```sh
     "card_picture_region": [[x1, y1, x2, y2]],
     "card_level_region": [[x1, y1, x2, y2]],
     ```
       <img src="./images/readme/card_image.png" alt="Battle Point Image" width="200" height="400">
 
-    7. At the end of the game, navigate to the end screen and get the coordianates and regions for the variables below. Continue to use the `check_window_bounds()` in the `setup_helper.py` to mark points and regions.
+    8. At the end of the game, navigate to the end screen, take a screenshot, and get the coordianates and regions for the variables below.
     ```sh
     "defeated_region": [[x1, y1, x2, y2]],
     "play_again_region": [[x1, y1, x2, y2]],
@@ -221,28 +226,37 @@ To get a local copy up and running follow these simple example steps.
     ```
       <img src="./images/readme/defeated_screen.png" alt="Battle Point Image" width="200" height="400">
 
-6. Update the system settings in your config file. `is_mac_laptop_screen` is true if you are on a mac laptop and the emulator is on the laptop screen. `is_roboflow` is true if you are using roboflow instead of running detection models locally. Using roboflow is recommended for now as the local detection is not as accurate. `env_path` is just the path to your .env file you renamed in step 4.
-  ```sh
-  "system_settings": {
-        "is_mac_laptop_screen": true,
-        "is_roboflow": true,
-        "env_path": "./example.env"
-    },
+    9. Update the system settings in your config file. `is_mac_laptop_screen` is true if you are on a mac laptop and the emulator is on the laptop screen. `is_roboflow` is true if you are using roboflow instead of running detection models locally. Using roboflow is recommended for now as the local detection is not as accurate. `env_path` is just the path to your .env file you renamed in step 4.
+      ```sh
+      "system_settings": {
+            "is_mac_laptop_screen": true,
+            "is_roboflow": true,
+            "env_path": "./example.env"
+        },
+      ```
+
+6. In `setup_helper.py`, fill out the `phase_region` the same as you have in the config file, update the `path` and `filename` to the path and filename of the screenshot of the battle screen, and run the `make_phase_picture()` function. This will make one of two phase icons needed. During a game you have to have the max amount of troops place, like 2/2, for the other phase icon to appear. Once you do that, use the `on_press()` function to take another screenshot of it. Then, update the `path` and `filename` to the path and filename of this new screenshot, and run the `make_phase_picture()` function. Once you have both images, move them to the `images/phase` folder. Reference images are below.
+
+<img src="./images/readme/solid.png" alt="Battle Point Image" width="100" height="100">
+<img src="./images/readme/translucent.png" alt="Battle Point Image" width="100" height="100">
+
+7. Finally, go to `train.py`, add the path to your config file to the `Agent()` constructor, and edit `bot.train()` to play how many games you want.
   ```
-5. Change git remote url to avoid accidental pushes to base project
-   ```sh
-   git remote set-url origin cooperbocko/clashml
-   git remote -v # confirm the changes
-   ```
+  bot = Agent('path/to/config.json', True)
 
-<p align="right">(<a href="#readme-top">back to top</a>)</p>
+  bot.train(# of games)
+  ```
 
+8. Run it!
+  ```bash
+  python train.py
+  ```
 
 
 <!-- USAGE EXAMPLES -->
 ## Usage
 
-Use this space to show useful examples of how a project can be used. Additional screenshots, code examples and demos work well in this space. You may also link to more resources.
+Loading...
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
