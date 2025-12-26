@@ -45,7 +45,8 @@
         "safe_click": [392, 882],
         "end_bar": [101, 895],
         "play_again": [114, 811],
-        "ok": [292, 812]
+        "ok": [292, 812],
+        "menu_safe_click": [538, 684]
     },
 
     "colors": {

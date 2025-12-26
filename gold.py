@@ -15,4 +15,4 @@ class DetectGold:
         if self.is_roboflow:
             return self.roboflow.predict(image)
         else:
-            return self.yolo.predict(source=Image, verbose=False)
+            return self.yolo.predict(source=image, verbose=False)[0]
