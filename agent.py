@@ -417,34 +417,15 @@ class Agent:
     def gold_check(self):
         screenshot = self.control.screenshot()
         
-        gold_results = self.gold_detection.predict(screenshot)
-        if True:
-            if len(gold_results) > 0:
-                for prediction in gold_results:
-                    x = prediction['x']
-                    y = prediction['y']
-                    width = prediction['width']
-                    height = prediction['height']
-                    print(f'x: {x}, y: {y}, width: {width}, height: {height}')
-                    x = int(x + width/2)
-                    y = int(y + height/2)
-                    print(f'Clicking: x:{x} y:{y}')
-                    self.control.click((x,y))
-                    self.recheck_board()
-                return True
-        else: 
-            boxes = gold_results.boxes.xyxy.cpu().numpy()
-            if len(boxes) > 0:
-                print('Detected gold circle(s)!')
-                for box in boxes:
-                    x1, y1, x2, y2 = box.astype(int)
-                    x = int((x1 + x2)/2)
-                    y = int((y1 + y2)/2)
-                    print(f'Clicking: x:{x} y:{y}')
-                    self.control.click((x,y))
-                    self.recheck_board()
-                return True
+        detected, points = self.gold_detection.predict(screenshot)
+        if detected:
+            print('Gold Detected!')
+            for point in points:
+                self.control.click(point)
+            self.recheck_board()
+            return True
         return False
+        
     
     def recheck_board(self) -> bool:
         for row in range(self.merge.ROWS):
