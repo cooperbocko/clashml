@@ -1,16 +1,19 @@
+import os
+
 import cv2
 import numpy as np
 from PIL import Image
 
 class TemplateMatch:
-    def __init__(self, threshhold: float, template_paths: list[str]):
+    def __init__(self, threshhold: float, folder_path: str):
         self.threshold = threshhold
-        self.template_paths = template_paths
+        self.folder_path = folder_path
         self.templates = []
         self.load_templates()
         
     def load_templates(self):
-        for path in self.template_paths:
+        for filename in os.listdir(self.folder_path):
+            path = os.path.join(self.folder_path, filename)
             template = cv2.imread(path)
             template = cv2.cvtColor(template, cv2.COLOR_BGR2GRAY)
             self.templates.append(template)

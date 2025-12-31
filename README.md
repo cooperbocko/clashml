@@ -312,7 +312,7 @@ Distributed under the project_license. See `LICENSE.txt` for more information.
 <!-- CONTACT -->
 ## Contact
 
-Cooper Bocko - [@twitter_handle](https://twitter.com/twitter_handle)
+Cooper Bocko - [@cbgc36](https://x.com/cbgc36)
 
 Project Link: [https://github.com/cooperbocko/clashml](https://github.com/cooperbocko/clashml)
 
@@ -323,9 +323,7 @@ Project Link: [https://github.com/cooperbocko/clashml](https://github.com/cooper
 <!-- ACKNOWLEDGMENTS -->
 ## Acknowledgments
 
-* []()
-* []()
-* []()
+* [Best README Template](https://github.com/othneildrew/Best-README-Template)
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 

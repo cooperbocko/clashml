@@ -4,10 +4,12 @@ import time
 from typing import Tuple
 from datetime import datetime
 
+import cv2
 import numpy as np
 import torch
 import pyautogui
 
+from edge import DetectEdge
 from merge import Merge
 from control import Control
 from text_detect import TextDetect
@@ -105,7 +107,8 @@ class Agent:
         self.replay_buffer = ReplayBuffer(capacity=100000)
         self.trainer = QTrainer(self.policy_net, self.target_net, self.replay_buffer, 1e-3, 0.99)
         self.e = self.EPSILON
-        self.phase_check = TemplateMatch(0.6, ['./images/phase/solid.png', 'images/phase/translucent.png', 'images/phase/phase_0.png'])
+        self.phase_check = TemplateMatch(0.6, ['./images/phase'])
+        self.edge_detect = DetectEdge(self.control, self.board, 5, 5)
         
     def train(self, n_games: int):
         best = float('-inf')
@@ -244,6 +247,8 @@ class Agent:
                 state = self.merge.get_state()
             next_states.append(state)
             dones.append(False)
+            
+            self.trainer.train_step(32)
 
             if self.debug_mode:
                 self.debug.print_step()
@@ -426,11 +431,19 @@ class Agent:
             return True
         return False
         
-    
     def recheck_board(self) -> bool:
+        screen = self.control.screenshot()
+        onboard = self.edge_detect.detect_edges(screen)
+        
         for row in range(self.merge.ROWS):
             for col in range(self.merge.COLS):
                 prev = self.merge.map[row][col]
+                curr = onboard[row][col]
+                
+                #If previous board was empty and current board is empty, go to next position
+                if prev == 0 and curr == 0:
+                    continue
+                
                 self.control.click(self.board[row][col])
                 card_image = pyautogui.screenshot(region=(self.card_picture_region[0][0] + self.left, self.card_picture_region[0][1] + self.top, (self.card_picture_region[0][2] - self.card_picture_region[0][0]), (self.card_picture_region[0][3] - self.card_picture_region[0][1])))
                 card = self.card_match.match(card_image)
@@ -456,9 +469,8 @@ class Agent:
                         #change level TODO: make sure this reference actually changes the object
                         prev.level = level
                         return True
-        
         return False
-    
+        
     def check_end(self):
         end = self.control.check_pixel(self.end_bar, self.is_mac_laptop_screen)
         if self.debug_mode:

@@ -1,5 +1,5 @@
 from agent import Agent
 
-bot = Agent('configs/pc.json', True)
+bot = Agent('configs/mac_laptop_screen_config.json', True)
 
-bot.train(32)
+bot.train(10)
