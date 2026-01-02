@@ -4,21 +4,24 @@ import time
 
 class Control:
     
-    def __init__(self, left: int, top: int, right: int, bottom: int):
+    def __init__(self, left: int, top: int, right: int, bottom: int, click_delay):
         self.left = left
         self.top = top
         self.right = right
         self.bottom = bottom
+        self.click_delay = click_delay
         
     def click(self, point: list[int]):
         pyautogui.moveTo(point[0] + self.left, point[1] + self.top)
         pyautogui.click()
+        time.sleep(self.click_delay)
         
     def drag(self, start_point: list[int], end_point: list[int]):
         pyautogui.moveTo(start_point[0] + self.left, start_point[1] + self.top)
         pyautogui.mouseDown()
         pyautogui.moveTo(end_point[0] + self.left, end_point[1] + self.top)
         pyautogui.mouseUp()
+        time.sleep(self.click_delay)
             
     def screenshot(self) -> Image:
         region = (self.left, self.top, self.right - self.left, self.bottom - self.top)
@@ -58,7 +61,7 @@ class Control:
         try:
             while True:
                 x, y = pyautogui.position()
-                print(f"Mouse position: ({x - self.left}, {y - self.top})", end='\r')  # Overwrites the line
+                print(f"Mouse position: ({x - self.left}, {y - self.top})", end='\r') 
                 time.sleep(0.5)
         except KeyboardInterrupt:
             print("\nDone.")
@@ -75,7 +78,7 @@ class Control:
                     color = pyautogui.pixel(x * 2, y * 2)
                 else:
                     color = pyautogui.pixel(x, y)
-                print(f"Mouse position: ({x}, {y}) {color}", end='\r')  # Overwrites the line
+                print(f"Mouse position: ({x}, {y}) {color}", end='\r') 
                 time.sleep(0.5)
         except KeyboardInterrupt:
             print("\nDone.")

@@ -1,15 +1,15 @@
 {
     "system_settings": {
-        "is_mac_laptop_screen": true,
+        "is_mac_laptop_screen": false,
         "is_roboflow": true,
         "env_path": "./example.env"
     },
 
     "screen_bounds": {
-        "left": 8,
-        "top": 68,
-        "right": 423,
-        "bottom": 966
+        "left": 0,
+        "top": 34,
+        "right": 605,
+        "bottom": 1114
     },
 
     "regions": {
@@ -45,7 +45,8 @@
         "safe_click": [392, 882],
         "end_bar": [101, 895],
         "play_again": [114, 811],
-        "ok": [292, 812]
+        "ok": [292, 812],
+        "menu_safe_click": [538, 684]
     },
 
     "colors": {
