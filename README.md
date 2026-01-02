@@ -83,7 +83,7 @@
 <!-- ABOUT THE PROJECT -->
 ## About The Project
 
-This project aims to create a bot that climb to a high rank in the Clash Royale game mode Merge Tactics. It is currently utilizing a simple DQN, but I have future plans to integrate other RL models as well.
+This project aims to create a bot that can climb to a high rank in the Clash Royale game mode Merge Tactics. It is currently utilizing a simple DQN, but I have future plans to integrate other RL models as well.
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
@@ -265,10 +265,9 @@ Loading...
 <!-- ROADMAP -->
 ## Roadmap
 
-- [ ] Feature 1
-- [ ] Feature 2
-- [ ] Feature 3
-    - [ ] Nested Feature
+- [1] Interactive Setup Helper
+- [2] Distributed Training
+
 
 See the [open issues](https://github.com/cooperbocko/clashml/issues) for a full list of proposed features (and known issues).
 
@@ -312,7 +311,7 @@ Distributed under the project_license. See `LICENSE.txt` for more information.
 <!-- CONTACT -->
 ## Contact
 
-Cooper Bocko - [@cbgc36](https://x.com/cbgc36)
+Cooper Bocko - [website](http://cooperbocko.github.io/)
 
 Project Link: [https://github.com/cooperbocko/clashml](https://github.com/cooperbocko/clashml)
 
