@@ -1,3 +1,4 @@
+from unittest import result
 from ultralytics import YOLO
 from PIL import Image
 
@@ -21,6 +22,8 @@ class DetectGold:
         
         if self.is_roboflow:
             results =  self.roboflow.predict(image)
+            if result == None:
+                return (False, points)
             if len(results) > 0:
                 for prediction in results:
                     x = prediction['x']

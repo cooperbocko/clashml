@@ -248,7 +248,7 @@ class Merge:
         elixir = np.array([self.elixir/100])
         max_placement = np.array([self.max_placement/10])
         state = np.concatenate([cards, cards_positions, hand, hand_positions, synergies, elixir, max_placement])
-        return state
+        return state    
     
     def is_board_full(self) -> bool:
         n_cards_on_board = 0
@@ -343,11 +343,9 @@ class Merge:
             
         return (True, reward)
     
-    def print_state(self):
-        print('')
-    
     def print_map(self):
-        print('[')
+        res = ''
+        res.append('[\n')
         for row in range(self.ROWS):
             row_str = []
             for col in range(self.COLS):
@@ -356,8 +354,9 @@ class Merge:
                     row_str.append(' 0')
                 else:
                     row_str.append(f'{str(cell.card.name)} {str(cell.level)}')
-            print(' '.join(row_str))
-        print(']')
+            res.join(row_str + '\n')
+        res.append(']')
+        return res
         
     #for simplicity of game actions
     def move_to_front(self, old_row: int, old_col: int) -> tuple[bool, int, int, int]:

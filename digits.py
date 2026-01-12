@@ -14,9 +14,10 @@ class DetectDigits:
         digits = ''
         if self.is_roboflow:
             results = self.roboflow.predict(image)
-            sorted_predictions = sorted(results, key=lambda r: r['x'])
-            for prediction in sorted_predictions:
-                digits = digits + prediction['class']
+            if results != None:
+                sorted_predictions = sorted(results, key=lambda r: r['x'])
+                for prediction in sorted_predictions:
+                    digits = digits + prediction['class']
         else:
             results = self.yolo.predict(source=image, verbose=False)[0]
             boxes = results.boxes.xyxy.cpu().numpy()

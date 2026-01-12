@@ -111,29 +111,6 @@ To get a local copy up and running follow these simple example steps.
 * [Python 3.11](https://www.python.org/downloads/release/python-31311/)
 * [Roboflow Account](https://roboflow.com)
 * [Bluestackts]() (Optional; can use other emulators)
-* Pytorch
-  ```sh
-  pip install torch
-  ```
-* Ultralytics
-  ```sh
-    pip install ultralytics
-    ```
-* PyAutoGUI
-  ```sh
-    pip install PyAutoGui
-    ```
-* Numpy
-  ```sh
-    pip install numpy
-    ```
-* CV2
-* PIL
-* Easyocr
-* inference sdk
-* dotenv
-* clip
-* sklearn
 
 ### Installation
 
@@ -146,6 +123,7 @@ To get a local copy up and running follow these simple example steps.
    ```sh
    pip install requirements.txt
    ```
+   Currently, this is only for Windows. I am working on getting Mac requirements too.
 4. Enter your API in `example.env`. Rename it and add it to your `.gitignore`
    ```
    ROBOFLOW_API_KEY = 'ENTER YOUR API';
@@ -267,6 +245,7 @@ Loading...
 
 - [1] Interactive Setup Helper
 - [2] Distributed Training
+- [3] Other RL Models
 
 
 See the [open issues](https://github.com/cooperbocko/clashml/issues) for a full list of proposed features (and known issues).
