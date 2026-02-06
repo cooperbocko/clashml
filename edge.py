@@ -25,10 +25,10 @@ class DetectEdge:
                     point[1] + self.buffer
                 ]
                 crop = self.control.get_cropped_image(image, region)
-                crop.show()
                 
                 count, edge_map = self.check_edges(crop)
                 if count >= self.threshold:
+                    crop.show()
                     res[row][col] = count
         return res
         

@@ -11,7 +11,7 @@ SOURCE_DIR = Path('./debug')
 DESTINATION_DIR = Path('./export')
 
 # Set the prefix string to look for
-PREFIX = "elixr"
+PREFIX = "screenshot"
 
 def move_files_by_prefix(source_dir: Path, destination_dir: Path, prefix: str):
     """

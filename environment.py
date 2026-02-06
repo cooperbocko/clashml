@@ -23,7 +23,7 @@ class MergeEnv:
     NO_ACTION = MOVE_BENCH_START + NUM_BOARD_SLOTS
     TOTAL_ACTIONS = NO_ACTION + 1
     
-    def __init__(self, config: Config):
+    def __init__(self, config: Config, env_path: str):
         self.config = config
         self.debug = Debug()
         self.debug_mode = True
@@ -31,35 +31,34 @@ class MergeEnv:
             self.config.screen_bounds.left, 
             self.config.screen_bounds.top, 
             self.config.screen_bounds.right, 
-            self.config.screen_bounds.bottom
+            self.config.screen_bounds.bottom,
+            0.1
         )
         self.merge = Merge()
         self.game_state = ''
-        
-        #TODO: resize
         self.card_match = ImageMatch("models/card_match_db.npz", "images/cards", (56, 70), True) 
         self.level_match = ImageMatch("models/level_match_db.npz", "images/levels", (19, 18), False)
-        self.phase_check = TemplateMatch(0.6, ['./images/phase'])
+        self.phase_check = TemplateMatch(0.6, './images/phase')
         self.digit_model = DetectDigits(
             self.config.system_settings.is_roboflow,
             './models/best_digits.pt',
             self.config.system_settings.env_path
         )
-        self.gold_model = DetectGold(True, "models/best_gold.pt", self.env_path)
-        self.edge_model = DetectEdge(self.control, self.config.click_points.board, 5, 5)
+        self.gold_model = DetectGold(True, "models/best_gold.pt", env_path)
+        self.edge_detect = DetectEdge(self.control, self.config.click_points.board, 5, 5)
         self.text_detect = TextDetect()
         
     def reset(self):
         self.merge = Merge()
         time.sleep(5)
-        for i in range(10):
+        for i in range(20):
             self.control.click(self.config.click_points.menu_safe_click)
         self.control.click(self.config.click_points.battle)
         
         #Wait for phase icon to appear
         while not self.phase_wait():
             time.sleep(0.5)
-        time.sleep(0.5)
+        time.sleep(2)
         self.game_state = 'unchecked round'
             
         #Get inital state
@@ -75,25 +74,27 @@ class MergeEnv:
     def step(self, action: int) -> tuple[list[int], int, float, list[int], bool]:
         #Enter actual gameplay
         if self.game_state == 'unchecked round':
-            self.gold_check()
+            #self.gold_check()
+            self.update_state()
             self.game_state = 'checked round'
             
         prev_state = self.merge.get_state()
         reward, changed = self.do_action(action)
         #Debug
         if self.debug_mode:
-            self.reward = reward
+            self.debug.reward = reward
             name, position = self.decode_action(action)
-            row = int(position / 5)
-            col = position % 5
-            self.action = f'{name}:{row}-{col}'
+            if name == "buy":
+                row = 0
+                col = position
+            else:
+                row = int(position / 5)
+                col = position % 5
+            self.debug.action = f'{name}:{row}-{col}'
+            self.debug.amap = self.merge.print_map()
         if changed:
             time.sleep(0.5)
-            elixir, hand = self.update_state()
-            #Debug
-            if self.debug_mode:
-                self.debug.elixir = elixir
-                self.debug.cards = hand
+            self.update_state()
         if not self.check_end():
             #Debug
             if self.debug_mode:
@@ -150,7 +151,7 @@ class MergeEnv:
             
     def phase_wait(self) -> bool:
         screenshot = self.control.screenshot()
-        phase = self.control.get_cropped_images(screenshot, self.config.regions.phase_region)
+        phase = self.control.get_cropped_image(screenshot, self.config.regions.phase_region)
         #Debug
         if self.debug_mode:
             self.debug.save_image(phase, 'phase')
@@ -165,20 +166,20 @@ class MergeEnv:
         
         while start_card == 'no_card':
             self.control.click(start1)
-            start_card_image = self.control.get_cropped_images(
+            start_card_image = self.control.get_cropped_image(
                 self.control.screenshot(), 
                 self.config.regions.card_picture_region
             )
             start_card = self.card_match.match(start_card_image)
             if (start_card == 'no_card'):
                 self.control.click(start2)
-                start_card_image = self.control.get_cropped_images(
+                start_card_image = self.control.get_cropped_image(
                     self.control.screenshot(), 
                     self.config.regions.card_picture_region
                 )
                 start_card = self.card_match.match(start_card_image)
                 
-        level_image = self.control.get_cropped_images(
+        level_image = self.control.get_cropped_image(
             self.control.screenshot(),
             self.config.regions.card_level_region
         )
@@ -219,8 +220,9 @@ class MergeEnv:
             for card_img in card_imgs:
                 pos += 1
                 self.debug.save_image(card_img, f'card{pos}')
+            self.debug.elixir = elixir
+            self.debug.cards = cards
             
-        
     def gold_check(self) -> bool:
         screenshot = self.control.screenshot()
         
@@ -303,38 +305,37 @@ class MergeEnv:
         if action_name == "buy":
             valid, reward = self.merge.buy_card(position)
             changed = valid
-            
             if valid:
                 if position == 0:
-                    self.control.click(self.hand[0])
+                    self.control.click(self.config.click_points.hand[0])
                 elif position == 1:
-                    self.control.click(self.hand[1])
+                    self.control.click(self.config.click_points.hand[1])
                 else:
-                    self.control.click(self.hand[2])
+                    self.control.click(self.config.click_points.hand[2])
         elif action_name == "sell":
             valid, reward = self.merge.sell_card(row, col)
             changed = valid
             
             if valid:
-                self.control.drag(fpoint, self.hand[0])
+                self.control.drag(fpoint, self.config.click_points.hand[0])
         elif action_name == "move_to_front":
             valid, r, c, reward = self.merge.move_to_front(row, col)
             changed = False
-            tpoint = self.board[r][c]
+            tpoint = self.config.click_points.board[r][c]
             
             if valid:
                 self.control.drag(fpoint, tpoint)
         elif action_name == "move_to_back":
             valid, r, c, reward = self.merge.move_to_back(row, col)
             changed = False
-            tpoint = self.board[r][c]
+            tpoint = self.config.click_points.board[r][c]
             
             if valid:
                 self.control.drag(fpoint, tpoint)
         elif action_name == "move_to_bench":
             valid, r, c, reward = self.merge.move_to_bench(row, col)
             changed = False
-            tpoint = self.board[r][c]
+            tpoint = self.config.click_points.board[r][c]
             
             if valid:
                 self.control.drag(fpoint, tpoint)

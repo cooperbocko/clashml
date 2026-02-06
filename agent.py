@@ -1,4 +1,5 @@
 import random
+import time
 
 import torch
 
@@ -23,17 +24,15 @@ class Agent:
     NO_ACTION = MOVE_BENCH_START + NUM_BOARD_SLOTS
     TOTAL_ACTIONS = NO_ACTION + 1
     
-    def __init__(self, config_path: str, debug: bool = False):
+    def __init__(self, config_path: str, env_path: str, debug: bool = False):
         if torch.cuda.is_available():
             print("Using CUDA GPU")
             device = torch.device("cuda")
         else:
             print("CUDA GPU not available, using CPU")
             device = torch.device("cpu")
-        
-        self.config = Config().load_from_json(config_path)
-        self.env = MergeEnv(self.config)
-        
+        self.config = Config.load_from_json(config_path)
+        self.env = MergeEnv(self.config, env_path)
         self.policy_net = DQN(len(self.env.get_state()), 128, self.TOTAL_ACTIONS)
         #self.policy_net.load('./models/100_last.pth') -> use this to load pretained weights
         self.target_net = DQN(len(self.env.get_state()), 128, self.TOTAL_ACTIONS)
@@ -49,9 +48,11 @@ class Agent:
             run = 0
             state = self.env.reset()
             action = self.get_action(state)
+            game_reward = 0
             
             #play game
             while True:
+                time.sleep(0.25)
                 prev_state, action, reward, next_state, done = self.env.step(action)
                 game_reward += reward
                 self.replay_buffer.push(prev_state, action, reward, next_state, done)
@@ -68,8 +69,13 @@ class Agent:
             self.policy_net.save('./models', 'last_merge.pth')
             
     def get_action(self, state: list[int]):
+        action = 0
         if random.random() < self.e:
-                action = random.randint(0, self.TOTAL_ACTIONS - 1)
+                half = random.randint(0, 1)
+                if 0.5 >= half:
+                    action = random.randint(0, 2)
+                else:
+                    action = random.randint(0, self.TOTAL_ACTIONS - 1)
                 self.e = max(self.EPSILON_MIN, self.e * self.EPSILON_DECAY)
         else:
             with torch.no_grad():

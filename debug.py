@@ -17,6 +17,8 @@ class Debug():
         print(self.bmap)
         print(f'Action:{self.action}')
         print(f'Reward:{self.reward}')
+        print(f"Elixir:{self.elixir}")
+        print(f"hand:{self.cards}")
         print('After Map:')
         print(self.amap)
         
