@@ -2,9 +2,14 @@ import os
 import shutil
 from pathlib import Path
 
+from PIL import Image
+import PIL
+import cv2
+from config import Config
+
 # --- Configuration ---
 # Set the directory where the search should begin (recursively)
-SOURCE_DIR = Path('./debug')
+SOURCE_DIR = Path('./train')
 
 # Set the directory where the matching files will be moved
 # This script will create this directory if it doesn't exist.
@@ -12,6 +17,8 @@ DESTINATION_DIR = Path('./export')
 
 # Set the prefix string to look for
 PREFIX = "screenshot"
+
+config = Config.load_from_json("./configs/pc.json")
 
 def move_files_by_prefix(source_dir: Path, destination_dir: Path, prefix: str):
     """
@@ -49,14 +56,22 @@ def move_files_by_prefix(source_dir: Path, destination_dir: Path, prefix: str):
                 if destination_file_path.exists():
                     print(f"File already exists in destination: {destination_file_path.name}. Skipping move.")
                     continue
+
+                board = config.click_points.board
+                img = cv2.imread(str(source_file_path))
                 
-                # 5. Move the file
-                try:
-                    shutil.move(source_file_path, destination_file_path)
-                    moved_count += 1
-                    print(f"SUCCESS: Moved to {destination_file_path.resolve()}")
-                except Exception as e:
-                    print(f"ERROR moving file {source_file_path.name}: {e}")
+                for i in range(5):
+                    for j in range(5):
+                        point = board[i][j]
+                        x1 = point[0] - 30
+                        y1 = point[1] - 30
+                        x2 = point[0] + 30
+                        y2 = point[1] + 30
+                        crop = img[y1:y2, x1:x2]
+                        cv2.imwrite(str(destination_dir / f"{filename}{i}{j}.png"), crop)
+                        
+                
+                
 
     print("\n--- Summary ---")
     print(f"Search completed.")

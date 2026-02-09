@@ -6,47 +6,47 @@
     },
 
     "screen_bounds": {
-        "left": 0,
-        "top": 34,
-        "right": 605,
-        "bottom": 1114
+        "left": x1,
+        "top": y1,
+        "right": x2,
+        "bottom": y2
     },
 
     "regions": {
         "card_regions": [
-            [81, 786, 153, 876],
-            [162, 786, 234, 876],
-            [243, 786, 313, 876]
+            [x1, y1, x2, y2],
+            [x1, y1, x2, y2],
+            [x1, y1, x2, y2]
         ],
-        "elixr_region": [[330, 822, 375, 872]],
-        "placement_region": [[199, 352, 257, 392]],
-        "card_picture_region": [[197, 141, 272, 234]],
-        "card_level_region": [[283, 157, 302, 174]],
-        "defeated_region": [[152, 143, 263, 165]],
-        "play_again_region": [[28, 795, 200, 854]],
-        "ok_region": [[212, 795, 384, 854]],
-        "phase_region": [[164, 352, 196, 393]]
+        "elixr_region": [x1, y1, x2, y2],
+        "placement_region": [x1, y1, x2, y2],
+        "card_picture_region": [x1, y1, x2, y2],
+        "card_level_region": [x1, y1, x2, y2],
+        "defeated_region": [x1, y1, x2, y2],
+        "play_again_region": [x1, y1, x2, y2],
+        "ok_region": [x1, y1, x2, y2],
+        "phase_region": [x1, y1, x2, y2]
     },
 
     "click_points": {
         "board": [
-            [[112, 532], [167, 532], [217, 532], [272, 532], [322, 532]],
-            [[87, 572], [142, 572], [192, 572], [242, 572], [297, 572]],
-            [[112, 612], [167, 612], [217, 612], [272, 612], [322, 612]],
-            [[87, 652], [142, 652], [192, 652], [242, 652], [297, 652]],
-            [[67, 717], [117, 717], [172, 717], [227, 717], [275, 717]]
+            [[x1, y1], [x1, y1], [x1, y1], [x1, y1], [x1, y1]],
+            [[x1, y1], [x1, y1], [x1, y1], [x1, y1], [x1, y1]],
+            [[x1, y1], [x1, y1], [x1, y1], [x1, y1], [x1, y1]],
+            [[x1, y1], [x1, y1], [x1, y1], [x1, y1], [x1, y1]],
+            [[x1, y1], [x1, y1], [x1, y1], [x1, y1], [x1, y1]]
         ],
         "hand": [
-            [115, 832],
-            [198, 832],
-            [278, 832]
+            [x1, y1],
+            [x1, y1],
+            [x1, y1]
         ],
-        "battle": [212, 718],
-        "safe_click": [392, 882],
-        "end_bar": [101, 895],
-        "play_again": [114, 811],
-        "ok": [292, 812],
-        "menu_safe_click": [538, 684]
+        "battle": [x1, y1],
+        "safe_click": [x1, y1],
+        "end_bar": [x1, y1],
+        "play_again": [x1, y1],
+        "ok": [x1, y1],
+        "menu_safe_click": [x1, y1]
     },
 
     "colors": {

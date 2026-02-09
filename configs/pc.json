@@ -18,14 +18,14 @@
             [247, 942, 336, 1054],
             [349, 942, 438, 1054]
         ],
-        "elixr_region": [[458, 985, 520, 1054]],
-        "placement_region": [[293, 395, 365, 440]],
-        "card_picture_region": [[288, 137, 398, 274]],
-        "card_level_region": [[416, 162, 444, 185]],
-        "defeated_region": [[237, 174, 370, 201]],
-        "play_again_region": [[90, 960, 295, 1029]],
-        "ok_region": [[311, 960, 517, 1029]],
-        "phase_region": [[250, 388, 289, 438]]
+        "elixr_region": [458, 985, 520, 1054],
+        "placement_region": [293, 395, 365, 440],
+        "card_picture_region": [288, 137, 398, 274],
+        "card_level_region": [416, 162, 444, 185],
+        "defeated_region": [237, 174, 370, 201],
+        "play_again_region": [90, 960, 295, 1029],
+        "ok_region": [311, 960, 517, 1029],
+        "phase_region": [250, 388, 289, 438]
     },
 
     "click_points": {

@@ -38,21 +38,18 @@ class Control:
         
         return pyautogui.pixel(x, y)
     
-    def get_cropped_images(self, screenshot: Image, regions: list[list[int]]) -> list[Image]:
-        cropped_images = []
-        for region in regions:
-            crop = screenshot.crop(region)
+    def get_cropped_image(self, screenshot: Image, region: list[int]) -> Image:
+        crop = screenshot.crop(region)
 
-            # Always convert to RGB (flatten transparency correctly if RGBA)
-            if crop.mode == "RGBA":
-                background = Image.new("RGB", crop.size, (0, 0, 0))
-                background.paste(crop, mask=crop.split()[3])  # apply alpha as mask
-                crop = background
-            else:
-                crop = crop.convert("RGB")
+        # Always convert to RGB (flatten transparency correctly if RGBA)
+        if crop.mode == "RGBA":
+            background = Image.new("RGB", crop.size, (0, 0, 0))
+            background.paste(crop, mask=crop.split()[3])  # apply alpha as mask
+            crop = background
+        else:
+            crop = crop.convert("RGB")
 
-            cropped_images.append(crop)
-        return cropped_images
+        return crop
     
     #For checking coordinates inside of game screen
     def check_window_bounds(self):

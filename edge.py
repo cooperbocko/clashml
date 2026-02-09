@@ -1,7 +1,6 @@
 import cv2 
 import numpy as np
-import PIL
-
+from PIL import Image
 from control import Control
 
 class DetectEdge: 
@@ -11,7 +10,7 @@ class DetectEdge:
         self.buffer = buffer
         self.threshold = threshold
         
-    def detect_edges(self, image: PIL.Image) -> list[list[int]]:
+    def detect_edges(self, image) -> list[list[int]]:
         rows = len(self.points)
         cols = len(self.points[0])
         
@@ -19,16 +18,21 @@ class DetectEdge:
         for row in range(rows):
             for col in range(cols):
                 point = self.points[row][col]
-                point[0] += self.buffer
-                point[1] += self.buffer
-                region = [point] 
-                crop = self.control.get_cropped_images(image, region)
+                region = [
+                    point[0] - self.buffer,
+                    point[1] - self.buffer,
+                    point[0] + self.buffer,
+                    point[1] + self.buffer
+                ]
+                crop = self.control.get_cropped_image(image, region)
+                
                 count, edge_map = self.check_edges(crop)
                 if count >= self.threshold:
+                    crop.show()
                     res[row][col] = count
         return res
         
-    def check_edges(self, image: np.ndarray | PIL.Image):
+    def check_edges(self, image):
         image = np.array(image)
         
         gray = cv2.cvtColor(image, cv2.COLOR_RGB2GRAY)

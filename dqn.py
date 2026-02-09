@@ -34,9 +34,8 @@ class ReplayBuffer:
     def __init__(self, capacity=10000):
         self.buffer = deque(maxlen=capacity)
         
-    def push(self, states, actions, rewards, next_states, dones):
-        for state, action, reward, next_state, done in zip(states, actions, rewards, next_states, dones):
-            self.buffer.append((state, action, reward, next_state, done))
+    def push(self, state, action, reward, next_state, done):
+        self.buffer.append((state, action, reward, next_state, done))
         
     def sample(self, batch_size):
         batch = random.sample(self.buffer, batch_size)

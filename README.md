@@ -9,7 +9,6 @@
 -->
 
 
-
 <!-- PROJECT SHIELDS -->
 <!--
 *** I'm using markdown "reference style" links for readability.
@@ -24,7 +23,6 @@
 [![Issues][issues-shield]][issues-url]
 [![project_license][license-shield]][license-url]
 [![LinkedIn][linkedin-shield]][linkedin-url]
-
 
 
 <!-- PROJECT LOGO -->
@@ -51,11 +49,12 @@
 </div>
 
 
-
 <!-- TABLE OF CONTENTS -->
 <details>
   <summary>Table of Contents</summary>
   <ol>
+    <li>
+      <a href="#current-updates">Current Updates</a>
     <li>
       <a href="#about-the-project">About The Project</a>
       <ul>
@@ -70,6 +69,7 @@
       </ul>
     </li>
     <li><a href="#usage">Usage</a></li>
+    <li><a href="#roboflow-model-links">Roboflow Model Links</a></li>
     <li><a href="#roadmap">Roadmap</a></li>
     <li><a href="#contributing">Contributing</a></li>
     <li><a href="#license">License</a></li>
@@ -79,6 +79,13 @@
 </details>
 
 
+<!-- Current  Updates -->
+## Current Updates
+
+Right now, the project should work but it has limitations. Currently I have disabled checking for the the golden orbs that give you troops as the model I trained just is not consistently good enough to detect. I also need to work on a model that can detect if a card is present so I can check what is given from a golden orb drop.
+
+<p align="right">(<a href="#readme-top">back to top</a>)</p>
+
 
 <!-- ABOUT THE PROJECT -->
 ## About The Project
@@ -86,7 +93,6 @@
 This project aims to create a bot that can climb to a high rank in the Clash Royale game mode Merge Tactics. It is currently utilizing a simple DQN, but I have future plans to integrate other RL models as well.
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
-
 
 
 ### Built With
@@ -99,41 +105,19 @@ This project aims to create a bot that can climb to a high rank in the Clash Roy
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
 
-
 <!-- GETTING STARTED -->
 ## Getting Started
 
 This is an example of how you may give instructions on setting up your project locally.
 To get a local copy up and running follow these simple example steps.
 
+
 ### Prerequisites
 
 * [Python 3.11](https://www.python.org/downloads/release/python-31311/)
 * [Roboflow Account](https://roboflow.com)
 * [Bluestackts]() (Optional; can use other emulators)
-* Pytorch
-  ```sh
-  pip install torch
-  ```
-* Ultralytics
-  ```sh
-    pip install ultralytics
-    ```
-* PyAutoGUI
-  ```sh
-    pip install PyAutoGui
-    ```
-* Numpy
-  ```sh
-    pip install numpy
-    ```
-* CV2
-* PIL
-* Easyocr
-* inference sdk
-* dotenv
-* clip
-* sklearn
+
 
 ### Installation
 
@@ -146,6 +130,7 @@ To get a local copy up and running follow these simple example steps.
    ```sh
    pip install requirements.txt
    ```
+   Currently, this is only for Windows. I am working on getting Mac requirements too.
 4. Enter your API in `example.env`. Rename it and add it to your `.gitignore`
    ```
    ROBOFLOW_API_KEY = 'ENTER YOUR API';
@@ -261,18 +246,30 @@ Loading...
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
 
+<!-- ROBOFLOW MODEL LINKS -->
+## Roboflow Model Links
+
+[Digit Model](https://app.roboflow.com/clashml/clash-digit-detection-zjhdw/models)
+
+[Gold Orb Model](https://app.roboflow.com/clashml/merge-gold-circle-detect-8yzjn/models)
+
+[Card Present Model](https://app.roboflow.com/clashml/clash-card-present/models)
+
+<p align="right">(<a href="#readme-top">back to top</a>)</p>
+
 
 <!-- ROADMAP -->
 ## Roadmap
 
+- [-1] Work on the Roboflow Model that detects if a card is present or not.
+- [0] Improve Existing Roboflow Models
 - [1] Interactive Setup Helper
 - [2] Distributed Training
-
+- [3] Other RL Models
 
 See the [open issues](https://github.com/cooperbocko/clashml/issues) for a full list of proposed features (and known issues).
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
-
 
 
 <!-- CONTRIBUTING -->
@@ -298,14 +295,12 @@ Don't forget to give the project a star! Thanks again!
 </a>
 
 
-
 <!-- LICENSE -->
 ## License
 
-Distributed under the project_license. See `LICENSE.txt` for more information.
+Distributed under the MIT License. See `LICENSE.txt` for more information.
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
-
 
 
 <!-- CONTACT -->
@@ -318,14 +313,12 @@ Project Link: [https://github.com/cooperbocko/clashml](https://github.com/cooper
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
 
-
 <!-- ACKNOWLEDGMENTS -->
 ## Acknowledgments
 
 * [Best README Template](https://github.com/othneildrew/Best-README-Template)
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
-
 
 
 <!-- MARKDOWN LINKS & IMAGES -->
