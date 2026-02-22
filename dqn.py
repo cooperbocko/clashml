@@ -78,3 +78,7 @@ class QTrainer:
         self.optimizer.zero_grad()
         loss.backward()
         self.optimizer.step()
+
+        tau = 0.005
+        for target_param, policy_param in zip(self.target_net.parameters(), self.policy_net.parameters()):
+            target_param.data.copy_(tau * policy_param.data + (1.0 - tau) * target_param.data)

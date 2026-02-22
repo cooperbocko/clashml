@@ -36,6 +36,8 @@ class Agent:
         self.policy_net = DQN(len(self.env.get_state()), 128, self.TOTAL_ACTIONS)
         #self.policy_net.load('./models/100_last.pth') -> use this to load pretained weights
         self.target_net = DQN(len(self.env.get_state()), 128, self.TOTAL_ACTIONS)
+        self.target_net.load_state_dict(self.policy_net.state_dict())
+        self.target_net.eval()
         self.replay_buffer = ReplayBuffer(capacity=100000)
         self.trainer = QTrainer(self.policy_net, self.target_net, self.replay_buffer, 1e-3, 0.99)
         self.e = self.EPSILON
@@ -65,7 +67,6 @@ class Agent:
             if run > best:
                 best = run
                 self.policy_net.save('./models', 'best_merge.pth')
-                self.target_net.load_state_dict(self.policy_net.state_dict())
             self.policy_net.save('./models', 'last_merge.pth')
             
     def get_action(self, state: list[int]):

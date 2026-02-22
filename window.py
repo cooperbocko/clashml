@@ -1,8 +1,5 @@
 from pywinauto import Application
 
-import pyautogui
-
-
 # Connect to an existing application
 app = Application().connect(title="BlueStacks App Player 1")
 window = app.window(title="BlueStacks App Player 1")
