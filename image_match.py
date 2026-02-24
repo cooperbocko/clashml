@@ -9,8 +9,8 @@ from sklearn.metrics.pairwise import cosine_similarity
 
 class ImageMatch:
     
-    def __init__(self, db_path: str, images_path: str, resize: Tuple[int, int], gray: bool):
-        self.model, self.preprocess = clip.load("ViT-B/32", device=self.device)
+    def __init__(self, db_path: str, images_path: str, resize: Tuple[int, int], gray: bool, device):
+        self.model, self.preprocess = clip.load("ViT-B/32", device=device)
         self.db_path = db_path
         self.images_path = images_path
         self.resize = resize

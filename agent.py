@@ -32,7 +32,7 @@ class Agent:
             print("CUDA GPU not available, using CPU")
             device = torch.device("cpu")
         self.config = Config.load_from_json(config_path)
-        self.env = MergeEnv(self.config, env_path)
+        self.env = MergeEnv(self.config, env_path, device)
         self.policy_net = DQN(len(self.env.get_state()), 128, self.TOTAL_ACTIONS)
         #self.policy_net.load('./models/100_last.pth') -> use this to load pretained weights
         self.target_net = DQN(len(self.env.get_state()), 128, self.TOTAL_ACTIONS)

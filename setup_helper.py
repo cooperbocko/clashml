@@ -1,11 +1,20 @@
 import os
 
 from PIL import Image
+from pywinauto import Application
 
 from control import Control
 
 #To get screen bounds
 #Control.check_screen_bounds()
+#Windows users can use the code below to easily get the window bounds
+'''
+app = Application().connect(title="BlueStacks App Player 1")
+window = app.window(title="BlueStacks App Player 1")
+rect = window.rectangle()
+print(f"Rectangle: {rect}")
+print(f"Left: {rect.left}, Top: {rect.top}, Right: {rect.right}, Bottom: {rect.bottom}")
+'''
 
 #Create Control Object with screen bounds
 c = Control(0, 34, 605, 1114, 0)

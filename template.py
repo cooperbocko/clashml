@@ -13,6 +13,8 @@ class TemplateMatch:
         
     def load_templates(self):
         for filename in os.listdir(self.folder_path):
+            if not filename.lower().endswith(".png"):
+                continue
             path = os.path.join(self.folder_path, filename)
             template = cv2.imread(path)
             template = cv2.cvtColor(template, cv2.COLOR_BGR2GRAY)

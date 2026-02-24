@@ -109,8 +109,7 @@ This project aims to create a bot that can climb to a high rank in the Clash Roy
 <!-- GETTING STARTED -->
 ## Getting Started
 
-This is an example of how you may give instructions on setting up your project locally.
-To get a local copy up and running follow these simple example steps.
+To get a local copy up and running follow these simple example steps or watch this setup [video]().
 
 
 ### Prerequisites
@@ -129,10 +128,14 @@ To get a local copy up and running follow these simple example steps.
    git clone https://github.com/cooperbocko/clashml.git
    ```
 3. Install packages
+  Install the correct Pytorch version for your system [here](https://pytorch.org/get-started/locally/), or use the version included in one of the requirements files.
+  ```sh
+   pip install git+https://github.com/openai/CLIP.git
+   ```
+  Use mac_requirements.txt if you are running this on Mac, else use requirements.txt for Windows.
    ```sh
    pip install requirements.txt
    ```
-   Currently, this is only for Windows. I am working on getting Mac requirements too.
 4. Enter your API in `example.env`. Rename it and add it to your `.gitignore`
    ```
    ROBOFLOW_API_KEY = 'ENTER YOUR API';

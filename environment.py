@@ -23,7 +23,7 @@ class MergeEnv:
     NO_ACTION = MOVE_BENCH_START + NUM_BOARD_SLOTS
     TOTAL_ACTIONS = NO_ACTION + 1
     
-    def __init__(self, config: Config, env_path: str):
+    def __init__(self, config: Config, env_path: str, device):
         self.config = config
         self.debug = Debug()
         self.debug_mode = True
@@ -36,8 +36,8 @@ class MergeEnv:
         )
         self.merge = Merge()
         self.game_state = ''
-        self.card_match = ImageMatch("models/card_match_db.npz", "images/cards", (56, 70), True) 
-        self.level_match = ImageMatch("models/level_match_db.npz", "images/levels", (19, 18), False)
+        self.card_match = ImageMatch("models/card_match_db.npz", "images/cards", (56, 70), True, device) 
+        self.level_match = ImageMatch("models/level_match_db.npz", "images/levels", (19, 18), False, device)
         self.phase_check = TemplateMatch(0.6, './images/phase')
         self.digit_model = DetectDigits(
             self.config.system_settings.is_roboflow,
