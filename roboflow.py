@@ -1,6 +1,3 @@
-import concurrent.futures
-from unittest import result
-
 from inference_sdk import InferenceHTTPClient
 from PIL import Image, ImageOps
 import os
@@ -13,19 +10,14 @@ class Roboflow:
         load_dotenv(env_path)
         
         self.roboflow = InferenceHTTPClient(
-            api_url='https://detect.roboflow.com',
+            api_url='https://localhost:9001',
             api_key=os.getenv("ROBOFLOW_API_KEY")
         )
         self.model_id = model_id
         
-    def predict(self, image: Image, timeout: int=2):
-        with concurrent.futures.ThreadPoolExecutor(max_workers=1) as executor:
-            future = executor.submit(self.roboflow.infer, image, model_id=self.model_id)
-            try:
-                result = future.result(timeout=timeout)
-                return result['predictions']
-            except concurrent.futures.TimeoutError:
-                return None
+    def predict(self, image: Image):
+        image = image.convert("RGB")
+        self.roboflow.infer(image, self.model_id)
         
     @staticmethod
     def preprocess_image(image: Image):

@@ -101,6 +101,7 @@ This project aims to create a bot that can climb to a high rank in the Clash Roy
 * [![Python][Python]][Python-url]
 * [![Pytorch][Pytorch]][Pytorch-url]
 * [Ultralytics]
+* [![Docker][Docker]][Docker-url]
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
@@ -116,7 +117,8 @@ To get a local copy up and running follow these simple example steps.
 
 * [Python 3.11](https://www.python.org/downloads/release/python-31311/)
 * [Roboflow Account](https://roboflow.com)
-* [Bluestackts]() (Optional; can use other emulators)
+* [Bluestackts](https://www.bluestacks.com) (Optional; can use other emulators)
+* [Docker](https://www.docker.com)
 
 
 ### Installation
@@ -230,6 +232,11 @@ To get a local copy up and running follow these simple example steps.
   bot = Agent('path/to/config.json', True)
 
   bot.train(# of games)
+  ```
+
+8. Start Inference Serve
+  ```bash
+  inference server start
   ```
 
 8. Run it!
@@ -346,6 +353,8 @@ Project Link: [https://github.com/cooperbocko/clashml](https://github.com/cooper
 [Pytorch]: https://img.shields.io/badge/PyTorch-ee4c2c?logo=pytorch&logoColor=white
 [Pytorch-url]: https://pytorch.org
 [Ultralytics]: https://docs.ultralytics.com
+[Docker-url]: https://www.docker.com
+[Docker]: https://img.shields.io/badge/Docker-yellow?style=for-the-badge&logo=Docker&link=https%3A%2F%2Fwww.docker.com%2F
 
 [Next.js]: https://img.shields.io/badge/next.js-000000?style=for-the-badge&logo=nextdotjs&logoColor=white
 [Next-url]: https://nextjs.org/
