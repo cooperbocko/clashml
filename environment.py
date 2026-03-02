@@ -1,4 +1,6 @@
+from tabnanny import check
 import time
+import random
 
 from control import Control
 from config import Config
@@ -72,10 +74,14 @@ class MergeEnv:
         return self.merge.get_state()
     
     def step(self, action: int) -> tuple[list[int], int, float, list[int], bool]:
+        #Random check
+        if random.random() < 0.1:
+            self.update_state(check_elixir=True)
+            
         #Enter actual gameplay
         if self.game_state == 'unchecked round':
             #self.gold_check()
-            self.update_state()
+            self.update_state(check_elixir=True)
             self.game_state = 'checked round'
             
         prev_state = self.merge.get_state()
@@ -93,8 +99,9 @@ class MergeEnv:
             self.debug.action = f'{name}:{row}-{col}'
             self.debug.amap = self.merge.print_map()
         if changed:
+            #TODO: refine for getting clear picture
             time.sleep(0.5)
-            self.update_state()
+            self.update_state(check_elixir=False)
         if not self.check_end():
             #Debug
             if self.debug_mode:
@@ -183,8 +190,9 @@ class MergeEnv:
             self.control.screenshot(),
             self.config.regions.card_level_region
         )
+        #TODO: Make a model for card level
         start_card_level = int(self.level_match.match(level_image))
-        self.merge.add_starting_card(str.upper(start_card), start_card_level)
+        self.merge.add_starting_card(str.upper(start_card), 1)
         self.control.click(self.config.click_points.safe_click)
         
         #Debug
@@ -192,16 +200,19 @@ class MergeEnv:
             self.debug.save_image(start_card_image, 'start_card')
             self.debug.save_image(level_image, 'start_card_level')
         
-    def update_state(self) -> tuple[int, list[str]]:
+    def update_state(self, check_elixir: bool = True) -> tuple[int, list[str]]:
         screenshot = self.control.screenshot()
         
         elixir = 0
-        elixir_img = self.control.get_cropped_image(screenshot, self.config.regions.elixr_region)
-        elixir = self.digit_model.predict(elixir_img)
-        if len(elixir) > 0:
-            self.merge.elixir = int(elixir)
+        if check_elixir:
+            elixir_img = self.control.get_cropped_image(screenshot, self.config.regions.elixr_region)
+            elixir = self.digit_model.predict(elixir_img)
+            if len(elixir) > 0:
+                self.merge.elixir = int(elixir)
+            else:
+                self.merge.elixir = 0
         else:
-            self.merge.elixir = 0
+            elixir = self.merge.elixir
             
         cards = []
         card_imgs= []
@@ -215,7 +226,8 @@ class MergeEnv:
         #Debug
         if self.debug_mode:
             self.debug.save_image(screenshot, 'screenshot')
-            self.debug.save_image(elixir_img, 'elixir')
+            if check_elixir:
+                self.debug.save_image(elixir_img, 'elixir')
             pos = 0
             for card_img in card_imgs:
                 pos += 1

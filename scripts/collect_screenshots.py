@@ -3,19 +3,12 @@ from datetime import datetime
 import time
 from PIL import Image
 import os
+from config import Config
 
-CARD_PICTURE_REGION = [(197, 143, 272, 237)]
-card_regions = [[81, 786, 153, 876], [162, 786, 234, 876], [243, 786, 313, 876]]
-phase_region = [[164, 352, 196, 393]]
-card_level_region = [[282, 157, 301, 174]]
+config_path = "./configs/mac.json"
+config = Config.load_from_json(config_path)
 
-c = Control(8, 68, 423, 966)
-elixr = Control(315, 890, 365, 940)
-timez = Control(350, 220, 390, 270)
-place = Control(175, 400, 275, 475)
-card_picture = Control(197 + 8, 143 + 68, 272 + 8, 237 + 68)
-card_level = Control(291, 225, 310, 243)
-
+c = Control(config.screen_bounds.left, config.screen_bounds.top, config.screen_bounds.right, config.screen_bounds.bottom, 0)
 
 def constant():
     count = 0
@@ -35,13 +28,15 @@ def on_press():
     while True:
         key = input("Press a key: ")
         print(f"You pressed: {key}")
-        filename = f"screenshot_{datetime.now()}.png"
-        path = 'images/game_screenshots'
         s = c.screenshot()
+        s.save("./images/game_screenshots/screen.png")
+        path = 'images/game_screenshots'
         
-        level = c.get_cropped_images(s, card_level_region)[0]
-        
-        level.save(os.path.join(path, filename))
+        for region in config.regions.card_regions:
+            print(region)
+            filename = f"screenshot_{datetime.now()}.png"
+            card = c.get_cropped_image(s, region)
+            card.save(f"{path}/{filename}")
         
 def get_pics():
     path = './images/game_screenshots'

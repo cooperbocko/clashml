@@ -28,27 +28,23 @@ class LeveledCard:
      
 class Synergy(Enum):
     NOBEL = 0
-    CLAN = 1
-    GOBLIN = 2
-    UNDEAD = 3
-    ACE = 4
-    JUGGERNAUT = 5
-    BRAWLER = 6
-    RANGER = 7
-    ASSASSIN = 8
-    AVENGER = 9
-    BLASTER = 10
-    MAGE = 11
-    ELECTRIC = 12
-    FIRE = 13
-    GIANT = 14
-    PEKKA = 15
-    BRUTALIST = 16
-    SUPERSTAR = 17
-
-class Merge: 
-    CARDS = {
-    'KNIGHT' : Card(2, Synergy.NOBEL, Synergy.JUGGERNAUT, 0, True, 'Knight'),
+    TANK = 1
+    CLAN = 2
+    MARKSMAN = 3
+    GOBLIN = 4
+    ASSASSIN = 5
+    WARRIOR = 6
+    UNDEAD = 7
+    DRAGON = 8
+    FIRE = 9
+    HINDER = 10
+    TITAN = 11
+    SUPERSTAR = 12
+    ACE = 13
+    
+'''
+ALL_CARDS = {
+    'KNIGHT' : Card(2, Synergy.NOBEL, Synergy.TANK, 0, True, 'Knight'),
     'PRINCE' : Card(3, Synergy.NOBEL, Synergy.BRAWLER, 4, True, 'Prince'),
     'PRINCESS' : Card(4, Synergy.NOBEL, Synergy.BLASTER, 8, False, 'Princess'),
     'GOLDEN_KNIGHT' : Card(5, Synergy.NOBEL, Synergy.ASSASSIN, 12, True, 'Golden Knight'),
@@ -84,7 +80,36 @@ class Merge:
     
     'MINI_PEKKA': Card(2, Synergy.PEKKA, Synergy.BRUTALIST, 108, True, 'Mini Pekka'),
     'ROYAL_GIANT': Card(2, Synergy.GIANT, Synergy.RANGER, 112, False, 'Royal Giant'),
-    'MONK': Card(5, Synergy.ACE, Synergy.SUPERSTAR, 116, True, 'Monk')
+    'MONK': Card(5, Synergy.ACE, Synergy.SUPERSTAR, 116, True, 'Monk'),
+    
+    'GIANT': Card(3, Synergy.TITAN, Synergy.SUPERSTAR, 120, True, 'Giant'),
+    'GOBLIN_DEMOLISHER': Card(3, Synergy.GOBLIN, Synergy.WARRIOR, 124, True, 'Goblin Demolisher')
+    }'''
+
+class Merge: 
+    CARDS = {
+        'KNIGHT': Card(2, Synergy.NOBEL, Synergy.TANK, 0, True, 'Knight'),
+        'ARCHER': Card(2, Synergy.CLAN, Synergy.MARKSMAN, 4, False, 'Archer'),
+        'GOBLIN': Card(2, Synergy.GOBLIN, Synergy.ASSASSIN, 8, True, 'Goblin'),
+        'BARBARIAN': Card(2, Synergy.CLAN, Synergy.WARRIOR, 12, True, 'Barbarian'),
+        'SKELETON_DRAGON': Card(2, Synergy.UNDEAD, Synergy.DRAGON, 16, False, 'Skeleton Dragon'),
+        'WIZARD': Card(2, Synergy.FIRE, Synergy.HINDER, 20, False, 'Wizard'),
+        'DART_GOBLIN': Card(3, Synergy.GOBLIN, Synergy.MARKSMAN, 24, False, 'Dart Goblin'),
+        'GIANT': Card(3, Synergy.TITAN, Synergy.SUPERSTAR, 28, True, 'Giant'),
+        'MUSKETEER': Card(3, Synergy.NOBEL, Synergy.MARKSMAN, 32, False, 'Musketeer'),
+        'VALKYRIE': Card(3, Synergy.CLAN, Synergy.TANK, 36, True, 'Valkyrie'),
+        'ROYAL_GIANT': Card(3, Synergy.TITAN, Synergy.MARKSMAN, 40, False, 'Royal Giant'),
+        'SKELETON_GIANT': Card(3, Synergy.UNDEAD, Synergy.TANK, 44, True, 'Skeleton Giant'),
+        'GOBLIN_DEMOLISHER': Card(3, Synergy.GOBLIN, Synergy.WARRIOR, 48, False, 'Goblin Demolisher'),
+        'PEKKA': Card(4, Synergy.ACE, Synergy.SUPERSTAR, 52, True, 'Pekka'),
+        'WITCH': Card(4, Synergy.UNDEAD, Synergy.HINDER, 56, False, 'Witch'),
+        'BABY_DRAGON': Card(4, Synergy.FIRE, Synergy.DRAGON, 60, False, 'Baby Dragon'),
+        'PRINCE': Card(4, Synergy.NOBEL, Synergy.WARRIOR, 64, True, 'Prince'),
+        'GOBLIN_MACHINE': Card(4, Synergy.GOBLIN, Synergy.SUPERSTAR, 68, True, 'Gobin Machine'),
+        'SKELETON_KING': Card(5, Synergy.UNDEAD, Synergy.WARRIOR, 72, True, 'Skeleton King'),
+        'GOLDEN_KNIGHT' : Card(5, Synergy.NOBEL, Synergy.ASSASSIN, 76, True, 'Golden Knight'),
+        'ARCHER_QUEEN' : Card(5, Synergy.CLAN, Synergy.SUPERSTAR, 80, False, 'Archer Queen'),
+        'MONK': Card(5, Synergy.ACE, Synergy.TANK, 84, True, 'Monk'),
     }
     
     #consts
@@ -115,6 +140,7 @@ class Merge:
             print("Not enough elixir!")
             return (False, -1)
         
+        self.elixir -= card.base_cost
         return self.add_card(card)
     
     def sell_card(self, row: int, col: int) -> tuple[bool, int]:
@@ -131,6 +157,7 @@ class Merge:
         self.map[row][col] = 0
         print("Card sold!")
         _, reward = self.update_syns()
+        self.elixir += level_card.get_cost()
         return (True, reward)
     
     def move_card(self, oldrow: int, oldcol: int, newrow: int, newcol: int) -> tuple[bool, int]:
@@ -236,6 +263,7 @@ class Merge:
         highest_level_card.level = highest_level_card.level + 1
         self.current_cards[highest_level_card.get_index()] = highest_level_card
         self.map[highest_level_card.row][highest_level_card.col] = highest_level_card
+        self.elixir += 1
         return True
     
     def get_state(self) -> np.array:

@@ -54,7 +54,7 @@ class Agent:
             
             #play game
             while True:
-                time.sleep(0.25)
+                time.sleep(0.1)
                 prev_state, action, reward, next_state, done = self.env.step(action)
                 game_reward += reward
                 self.replay_buffer.push(prev_state, action, reward, next_state, done)

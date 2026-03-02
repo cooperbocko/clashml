@@ -16,6 +16,7 @@ class ImageMatch:
         self.resize = resize
         self.gray = gray
         self.db = None
+        self.device = device
         
         if os.path.exists(db_path):
             self.load_db()

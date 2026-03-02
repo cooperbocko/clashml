@@ -10,14 +10,17 @@ class Roboflow:
         load_dotenv(env_path)
         
         self.roboflow = InferenceHTTPClient(
-            api_url='https://localhost:9001',
+            api_url='http://localhost:9001',
             api_key=os.getenv("ROBOFLOW_API_KEY")
         )
         self.model_id = model_id
         
+        #dummy predict to load weights
+        self.predict(Image.new('RGB', (640, 640)))
+        
     def predict(self, image: Image):
         image = image.convert("RGB")
-        self.roboflow.infer(image, self.model_id)
+        return self.roboflow.infer(image, self.model_id)['predictions']
         
     @staticmethod
     def preprocess_image(image: Image):
