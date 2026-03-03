@@ -129,19 +129,19 @@ To get a local copy up and running follow these simple example steps or watch th
    ```
 3. Install packages
   Install the correct Pytorch version for your system [here](https://pytorch.org/get-started/locally/), or use the version included in one of the requirements files.
-  ```sh
-   pip install git+https://github.com/openai/CLIP.git
-   ```
   Use mac_requirements.txt if you are running this on Mac, else use requirements.txt for Windows.
    ```sh
    pip install requirements.txt
    ```
-4. Enter your API in `example.env`. Rename it and add it to your `.gitignore`
+  Install clip from openai
+  ```sh
+   pip install git+https://github.com/openai/CLIP.git
+   ```
+4. Enter your API KEY in `example.env`. Rename it and add it to your `.gitignore`
    ```
    ROBOFLOW_API_KEY = 'ENTER YOUR API';
    ```
 5. Create your config file
-
     1. Open `example_config.json`
     2. Use the setup script `setup_helper.py` to show cursor coordinates for the points and regions you will be marking. 
     3. Get Left(x1), Top(y1), Right(x2), and Bottom(y2) coordinates of your emulator screen. It does not have to be perfect but make sure to not cut off any of the screen.
