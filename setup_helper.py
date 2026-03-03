@@ -1,25 +1,24 @@
 import os
 
 from PIL import Image
-from polars import col
 
 from control import Control
 from config import Config
 
 #To get screen bounds
-#Control.check_screen_bounds(True)
+#Control.check_screen_bounds(False)
 #Windows users can use the code below to easily get the window bounds
 '''
 from pywinauto import Application
-app = Application().connect(title="BlueStacks App Player 1")
-window = app.window(title="BlueStacks App Player 1")
+app = Application().connect(title="BlueStacks App Player")
+window = app.window(title="BlueStacks App Player")
 rect = window.rectangle()
 print(f"Rectangle: {rect}")
 print(f"Left: {rect.left}, Top: {rect.top}, Right: {rect.right}, Bottom: {rect.bottom}")
 '''
 
 #Create Control Object with screen bounds
-c = Control(0, 65, 517, 985, 0)
+c = Control(9, 2, 651, 1117, 0)
 
 #Get screenshots for config file
 def on_press():
@@ -36,18 +35,18 @@ def on_press():
 #on_press()
 
 #Get crops from screenshots of the phase icons
-phase_region = [[250, 388, 289, 438]]
+phase_region = [251, 420, 290, 471]
 def make_phase_picture():
     path = 'images/game_screenshots'
-    filename = 'screenshot0_phase.png'
-    s = Image.open('images\game_screenshots\screenshot0.png')
-    phase = c.get_cropped_images(s, phase_region)[0]
+    filename = 'screenshot1_phase.png'
+    s = Image.open('images\game_screenshots\screenshot1.png')
+    phase = c.get_cropped_image(s, phase_region)
     phase.save(os.path.join(path, filename))
 #make_phase_picture()
 
 #Used to check the regions from you config file
 def test_regions():
-    config = Config.load_from_json("./configs/mac.json")
+    config = Config.load_from_json("./configs/YOURCONFIG")
     c = Control(config.screen_bounds.left, config.screen_bounds.top, config.screen_bounds.right, config.screen_bounds.bottom, 0)
     key = input("Press a key to take a screen shot: ")
     filename = f"screenshot.png"
@@ -84,7 +83,7 @@ def test_regions():
 #test_regions()
 
 def test_colors():
-    config = Config.load_from_json("./configs/mac.json")
+    config = Config.load_from_json("./configs/YOURCONFIG")
     c = Control(config.screen_bounds.left, config.screen_bounds.top, config.screen_bounds.right, config.screen_bounds.bottom, 0)
     key = input("Press a key to take a screen shot: ")
     filename = f"screenshot.png"
@@ -97,7 +96,7 @@ def test_colors():
     region = [x - 1, y - 1, x + 1, y + 1]
     color = c.get_cropped_image(s, region)
     color.save(f"{path}/color.png")
-test_colors()
+#test_colors()
     
     
     

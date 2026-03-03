@@ -129,10 +129,12 @@ To get a local copy up and running follow these simple example steps or watch th
    ```
 3. Install packages
   Install the correct Pytorch version for your system [here](https://pytorch.org/get-started/locally/).
+
   Use mac_requirements.txt if you are running this on Mac, else use requirements.txt for Windows.
    ```sh
-   pip install requirements.txt
+   pip install -r requirements.txt
    ```
+   
   Install clip from openai
   ```sh
    pip install git+https://github.com/openai/CLIP.git
