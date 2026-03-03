@@ -128,7 +128,7 @@ To get a local copy up and running follow these simple example steps or watch th
    git clone https://github.com/cooperbocko/clashml.git
    ```
 3. Install packages
-  Install the correct Pytorch version for your system [here](https://pytorch.org/get-started/locally/), or use the version included in one of the requirements files.
+  Install the correct Pytorch version for your system [here](https://pytorch.org/get-started/locally/).
   Use mac_requirements.txt if you are running this on Mac, else use requirements.txt for Windows.
    ```sh
    pip install requirements.txt
