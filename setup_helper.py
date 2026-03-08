@@ -97,8 +97,25 @@ def test_colors():
     color = c.get_cropped_image(s, region)
     color.save(f"{path}/color.png")
 #test_colors()
-    
-    
-    
-    
 
+def overlay_board_points():
+    from PIL import ImageDraw
+
+    config = Config.load_from_json("./configs/mac.json")
+    c = Control(
+        config.screen_bounds.left,
+        config.screen_bounds.top,
+        config.screen_bounds.right,
+        config.screen_bounds.bottom,
+        0,
+    )
+    s = c.screenshot()
+
+    draw = ImageDraw.Draw(s)
+    for lane in config.click_points.board:
+        for point in lane:
+            x, y = point[0], point[1]
+            draw.ellipse([x - 5, y - 5, x + 5, y + 5], outline="red", width=2)
+
+    s.save("images/game_screenshots/board_points_overlay.png")
+#overlay_board_points()
