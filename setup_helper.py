@@ -101,7 +101,7 @@ def test_colors():
 def overlay_board_points():
     from PIL import ImageDraw
 
-    config = Config.load_from_json("./configs/mac.json")
+    config = Config.load_from_json("./configs/YOUR_CONFIG")
     c = Control(
         config.screen_bounds.left,
         config.screen_bounds.top,

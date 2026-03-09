@@ -232,19 +232,21 @@ To get a local copy up and running follow these simple example steps or watch th
 <img src="./images/readme/solid.png" alt="Battle Point Image" width="100" height="100">
 <img src="./images/readme/translucent.png" alt="Battle Point Image" width="100" height="100">
 
-7. Finally, go to `train.py`, add the path to your config file to the `Agent()` constructor, and edit `bot.train()` to play how many games you want.
+7. In `setup_helper.py`, use the functions `test_regions()`, `test_colors()`, and `overlay_board_points()` to test your regions and click points in your config file and adjust them as needed.
+
+8. Finally, go to `train.py`, add the path to your config file to the `Agent()` constructor, and edit `bot.train()` to play how many games you want.
   ```
   bot = Agent('path/to/config.json', True)
 
   bot.train(# of games)
   ```
 
-8. Start Inference Serve
+9. Start Inference Serve
   ```bash
   inference server start
   ```
 
-8. Run it!
+10. Run it!
   ```bash
   python train.py
   ```
