@@ -21,7 +21,8 @@ class LeveledCard:
     hand_position: int = 0
     
     def get_cost(self):
-        return (2 ** (self.level - 1)) * self.card.base_cost
+        n = self.level - 1
+        return self.card.base_cost * (2 ** n) - 1
     
     def get_index(self):
         return self.card.base_index + self.level - 1
@@ -263,7 +264,7 @@ class Merge:
         highest_level_card.level = highest_level_card.level + 1
         self.current_cards[highest_level_card.get_index()] = highest_level_card
         self.map[highest_level_card.row][highest_level_card.col] = highest_level_card
-        self.elixir += 1
+        self.elixir += highest_level_card.level - 1
         return True
     
     def get_state(self) -> np.array:
