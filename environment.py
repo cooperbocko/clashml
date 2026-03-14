@@ -99,8 +99,6 @@ class MergeEnv:
             self.debug.action = f'{name}:{row}-{col}'
             self.debug.amap = self.merge.print_map()
         if changed:
-            #TODO: refine for getting clear picture
-            time.sleep(0.5)
             self.update_state(check_elixir=False)
         if not self.check_end():
             #Debug

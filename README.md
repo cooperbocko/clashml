@@ -109,7 +109,7 @@ This project aims to create a bot that can climb to a high rank in the Clash Roy
 <!-- GETTING STARTED -->
 ## Getting Started
 
-To get a local copy up and running follow these simple example steps or watch this setup [video]().
+To get a local copy up and running follow these simple example steps or watch this setup [video](https://youtu.be/Da0uVrbqK2U).
 
 
 ### Prerequisites
@@ -255,7 +255,8 @@ To get a local copy up and running follow these simple example steps or watch th
 <!-- USAGE EXAMPLES -->
 ## Usage
 
-Loading...
+Watch this [video](https://youtu.be/Da0uVrbqK2U) for the setup guide.
+Watch this [video](https://www.youtube.com/watch?v=hAuUKFfBRDU) to see how I made it and to watch the agent play.
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
