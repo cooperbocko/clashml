@@ -1,31 +1,33 @@
 {
     "system_settings": {
         "is_mac_laptop_screen": true,
-        "is_roboflow": true,
-        "env_path": "./secret.env"
+        "env_path": "./secret.env",
+        "digit_model": "clash-digit-detection-zjhdw/5",
+        "gold_model": "merge-gold-circle-detect-8yzjn/4",
+        "level_model": "level_model",
     },
 
     "screen_bounds": {
         "left": 0,
         "top": 65,
-        "right": 517,
-        "bottom": 985
+        "right": 515,
+        "bottom": 981
     },
 
     "regions": {
         "card_regions": [
-            [125, 806, 199, 902],
-            [213, 806, 286, 902],
-            [300, 806, 373, 902]
+            [123, 796, 199, 893],
+            [210, 796, 286, 893],
+            [297, 796, 373, 893]
         ],
-        "elixr_region": [394, 842, 444, 900],
+        "elixr_region": [390, 836, 444, 892],
         "placement_region": [252, 334, 307, 368],
-        "card_picture_region": [246, 113, 340, 230],
-        "card_level_region": [359, 137, 377, 155],
+        "card_picture_region": [245, 114, 338, 232],
+        "card_level_region": [354, 137, 374, 155],
         "defeated_region": [200, 145, 313, 170],
         "play_again_region": [75, 814, 251, 873],
         "ok_region": [264, 814, 440, 873],
-        "phase_region": [213, 326, 248, 374]
+        "phase_region": [210, 326, 247, 374]
     },
 
     "click_points": {
@@ -43,7 +45,7 @@
         ],
         "battle": [265, 715],
         "safe_click": [460, 815],
-        "end_bar": [90, 916],
+        "end_bar": [123, 906],
         "play_again": [165, 845],
         "ok": [360, 845],
         "menu_safe_click": [460, 560]

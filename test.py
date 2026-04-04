@@ -1,9 +1,22 @@
-from digits import DetectDigits
-from PIL import Image
+from environment import MergeEnv
+from config import Config
+import torch
+import time
 
-digits = DetectDigits(True, './models/best_digits.pt', './env.json')
-img = Image.open('./debug/49/elixir_49.png')
-print(digits.predict(img))
+config = Config.load_from_json('./configs/mac.json')
+device = torch.device("cpu")
+env = MergeEnv(config, device)
+
+
+while True:
+    key = input("Press a key to take a screen shot: ")
+    time.sleep(3)
+    print(env.merge.print_map())
+    env.recheck_board()
+    print(env.merge.print_map())
+    
+
+
     
 
 

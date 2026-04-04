@@ -6,7 +6,7 @@ from control import Control
 from config import Config
 
 #To get screen bounds
-#Control.check_screen_bounds(False)
+#Control.check_screen_bounds(True)
 #Windows users can use the code below to easily get the window bounds
 '''
 from pywinauto import Application
@@ -18,7 +18,7 @@ print(f"Left: {rect.left}, Top: {rect.top}, Right: {rect.right}, Bottom: {rect.b
 '''
 
 #Create Control Object with screen bounds
-c = Control(9, 2, 651, 1117, 0)
+c = Control(0, 65, 515, 981, 0)
 
 #Get screenshots for config file
 def on_press():
@@ -35,19 +35,27 @@ def on_press():
 #on_press()
 
 #Get crops from screenshots of the phase icons
-phase_region = [251, 420, 290, 471]
+phase_region = [210, 326, 247, 374]
 def make_phase_picture():
     path = 'images/game_screenshots'
     filename = 'screenshot1_phase.png'
-    s = Image.open('images\game_screenshots\screenshot1.png')
+    s = Image.open('images/game_screenshots/screenshot1.png')
     phase = c.get_cropped_image(s, phase_region)
     phase.save(os.path.join(path, filename))
 #make_phase_picture()
 
+#Enter your condig file path
+config = Config.load_from_json("./configs/mac.json")
+c = Control(
+        config.screen_bounds.left,
+        config.screen_bounds.top,
+        config.screen_bounds.right,
+        config.screen_bounds.bottom,
+        0,
+    )
+
 #Used to check the regions from you config file
 def test_regions():
-    config = Config.load_from_json("./configs/YOURCONFIG")
-    c = Control(config.screen_bounds.left, config.screen_bounds.top, config.screen_bounds.right, config.screen_bounds.bottom, 0)
     key = input("Press a key to take a screen shot: ")
     filename = f"screenshot.png"
     path = 'images/game_screenshots'
@@ -83,8 +91,6 @@ def test_regions():
 #test_regions()
 
 def test_colors():
-    config = Config.load_from_json("./configs/YOURCONFIG")
-    c = Control(config.screen_bounds.left, config.screen_bounds.top, config.screen_bounds.right, config.screen_bounds.bottom, 0)
     key = input("Press a key to take a screen shot: ")
     filename = f"screenshot.png"
     path = 'images/game_screenshots'
@@ -100,15 +106,6 @@ def test_colors():
 
 def overlay_board_points():
     from PIL import ImageDraw
-
-    config = Config.load_from_json("./configs/YOUR_CONFIG")
-    c = Control(
-        config.screen_bounds.left,
-        config.screen_bounds.top,
-        config.screen_bounds.right,
-        config.screen_bounds.bottom,
-        0,
-    )
     s = c.screenshot()
 
     draw = ImageDraw.Draw(s)
@@ -119,3 +116,13 @@ def overlay_board_points():
 
     s.save("images/game_screenshots/board_points_overlay.png")
 #overlay_board_points()
+
+def test_tile_buffer():
+    s = c.screenshot()
+
+    x, y = config.click_points.board[0][0]
+    buf = config.system_settings.tile_buffer
+    region = [x - buf, y - buf, x + buf, y + buf]
+    tile = c.get_cropped_image(s, region)
+    tile.save("images/game_screenshots/tile_buffer.png")
+#test_tile_buffer()

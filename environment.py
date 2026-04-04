@@ -1,6 +1,7 @@
-from tabnanny import check
 import time
 import random
+
+import click
 
 from control import Control
 from config import Config
@@ -9,7 +10,7 @@ from image_match import ImageMatch
 from merge import Merge
 from digits import DetectDigits
 from gold import DetectGold
-from edge import DetectEdge
+from card_present import DetectCardPresent
 from text_detect import TextDetect
 from debug import Debug
 
@@ -25,7 +26,7 @@ class MergeEnv:
     NO_ACTION = MOVE_BENCH_START + NUM_BOARD_SLOTS
     TOTAL_ACTIONS = NO_ACTION + 1
     
-    def __init__(self, config: Config, env_path: str, device):
+    def __init__(self, config: Config, device):
         self.config = config
         self.debug = Debug()
         self.debug_mode = True
@@ -39,15 +40,9 @@ class MergeEnv:
         self.merge = Merge()
         self.game_state = ''
         self.card_match = ImageMatch("models/card_match_db.npz", "images/cards", (56, 70), True, device) 
-        self.level_match = ImageMatch("models/level_match_db.npz", "images/levels", (19, 18), False, device)
         self.phase_check = TemplateMatch(0.6, './images/phase')
-        self.digit_model = DetectDigits(
-            self.config.system_settings.is_roboflow,
-            './models/best_digits.pt',
-            self.config.system_settings.env_path
-        )
-        self.gold_model = DetectGold(True, "models/best_gold.pt", env_path)
-        self.edge_detect = DetectEdge(self.control, self.config.click_points.board, 5, 5)
+        self.digit_model = DetectDigits(self.config.system_settings.digit_model, self.config.system_settings.env_path)
+        self.gold_model = DetectGold(self.config.system_settings.gold_model, self.config.system_settings.env_path)
         self.text_detect = TextDetect()
         
     def reset(self):
@@ -233,61 +228,64 @@ class MergeEnv:
             self.debug.elixir = elixir
             self.debug.cards = cards
             
-    def gold_check(self) -> bool:
-        screenshot = self.control.screenshot()
-        
+    def gold_check(self):
+        screenshot = self.control.fast_screenshot()
         detected, points = self.gold_model.predict(screenshot)
+        
         if detected:
             print('Gold Detected!')
             for point in points:
                 self.control.click(point)
-            self.recheck_board()
-            return True
-        return False
+                
+                #Check if gold actually went away
+                check_screenshot = self.control.fast_screenshot()
+                check_detected, check_points = self.gold_model.predict(check_screenshot)
+                if len(check_points) < len(points):
+                    self.recheck_board()
     
-    def recheck_board(self) -> bool:
-        screenshot = self.control.screenshot()
-        onboard = self.edge_detect.detect_edges(screenshot)
+    def recheck_board(self):
+        start = time.time()
+        click_time = 0
+        screenshot_time = 0
+        match_time = 0
         
-        for row in range(self.merge.ROWS):
-            for col in range(self.merge.COLS):
-                prev = self.merge.map[row][col]
-                curr = onboard[row][col]
+        points = self.merge.points_to_check()
+        for point in points:
+            row = point[0]
+            col = point[1]
+            
+            previous = self.merge.map[row][col]
                 
-                #If previous board was empty and current board is empty, go to next position
-                if prev == 0 and curr == 0:
-                    continue
+            temp = time.time()
+            self.control.click(self.config.click_points.board[row][col])
+            click_time += time.time() - temp
                 
-                self.control.click(self.config.click_points.board[row][col])
-                screenshot = self.control.screenshot()
-                card_image = self.control.get_cropped_image(
-                    screenshot,
-                    self.config.regions.card_picture_region
-                )
-                card = self.card_match.match(card_image)
-                level_image = self.control.get_cropped_image(
-                    screenshot,
-                    self.config.regions.card_level_region
-                )
-                level = int(self.level_match.match(level_image))
+            temp = time.time()
+            screenshot = self.control.fast_screenshot()
+            screenshot_time += time.time() - temp
                 
-                if prev == 0:
-                    if card == 'no_card':
-                        #do nothing
-                        continue
-                    else:
-                        #add new card
-                        self.merge.add_card_in(str.upper(card), level, row, col)
-                        return True
-                else:
-                    if prev.level == level:
-                        #do nothing
-                        continue
-                    else:
-                        #change level TODO: make sure this reference actually changes the object
-                        prev.level = level
-                        return True
-        return False
+            temp = time.time()
+            current = self.card_match.match(self.control.get_cropped_image(
+                screenshot,
+                self.config.regions.card_picture_region
+            ))
+            match_time += time.time() - temp
+                
+            if current == 'no_card' and previous != 0:
+                self.merge.remove_card(row, col)
+            else:
+                #get level
+                level = 1
+                if current != 'no_card' and previous == 0:
+                    self.merge.add_card_in(str.upper(current), level, row, col)
+                elif current != 'no_card' and previous != 0 and previous.level != level:
+                    previous.level = level
+                        
+            temp = time.time()
+            self.control.click(self.config.click_points.safe_click)
+            click_time += time.time() - temp
+                
+        print(f"click: {click_time}, screenshot: {screenshot_time}, match: {match_time}, total: {time.time() - start}")
     
     def decode_action(self, action: int) -> tuple[str, int]:
         if action < self.SELL_START:

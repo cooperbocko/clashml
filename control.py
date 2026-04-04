@@ -1,4 +1,6 @@
 from PIL import Image
+from click import pause
+from mss import mss
 import pyautogui
 import time
 
@@ -10,10 +12,11 @@ class Control:
         self.right = right
         self.bottom = bottom
         self.click_delay = click_delay
+        pyautogui.PAUSE = 0
+        self.mss = mss()
         
     def click(self, point: list[int]):
-        pyautogui.moveTo(point[0] + self.left, point[1] + self.top)
-        pyautogui.click()
+        pyautogui.click(x=point[0] + self.left, y=point[1] + self.top, _pause=False)
         time.sleep(self.click_delay)
         
     def drag(self, start_point: list[int], end_point: list[int]):
@@ -27,6 +30,16 @@ class Control:
         region = (self.left, self.top, self.right - self.left, self.bottom - self.top)
         screenshot = pyautogui.screenshot(region = region)
         return screenshot
+    
+    def fast_screenshot(self) -> Image:
+        region = {
+            "left": self.left, 
+            "top": self.top, 
+            "width": self.right - self.left, 
+            "height": self.bottom - self.top
+        }
+        sct_img = self.mss.grab(region)
+        return Image.frombytes("RGB", sct_img.size, sct_img.bgra, "raw", "BGRX")
     
     def check_pixel(self, point: list[int], is_mac_laptop_screen:bool = False) -> tuple[int, int, int]:
         x, y = point

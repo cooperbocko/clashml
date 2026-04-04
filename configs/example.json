@@ -1,8 +1,10 @@
 {
     "system_settings": {
         "is_mac_laptop_screen": false,
-        "is_roboflow": true,
-        "env_path": "./example.env"
+        "env_path": "./example.env",
+        "digit_model": "clash-digit-detection-zjhdw",
+        "gold_model": "merge-gold-circle-detect-8yzjn",
+        "level_model": "level_model",
     },
 
     "screen_bounds": {
@@ -52,5 +54,4 @@
     "colors": {
         "end_colors": [23, 25, 46]
     }
-
 }

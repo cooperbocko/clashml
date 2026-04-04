@@ -1,6 +1,6 @@
 import time
 from PIL import Image, ImageDraw
-from edge import DetectEdge
+from old.edge import DetectEdge
 from control import Control
 from config import Config
 

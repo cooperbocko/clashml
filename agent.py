@@ -24,7 +24,7 @@ class Agent:
     NO_ACTION = MOVE_BENCH_START + NUM_BOARD_SLOTS
     TOTAL_ACTIONS = NO_ACTION + 1
     
-    def __init__(self, config_path: str, env_path: str, debug: bool = False):
+    def __init__(self, config_path: str, debug: bool = False):
         if torch.cuda.is_available():
             print("Using CUDA GPU")
             device = torch.device("cuda")
@@ -32,7 +32,7 @@ class Agent:
             print("CUDA GPU not available, using CPU")
             device = torch.device("cpu")
         self.config = Config.load_from_json(config_path)
-        self.env = MergeEnv(self.config, env_path, device)
+        self.env = MergeEnv(self.config, device)
         self.policy_net = DQN(len(self.env.get_state()), 128, self.TOTAL_ACTIONS)
         #self.policy_net.load('./models/100_last.pth') -> use this to load pretained weights
         self.target_net = DQN(len(self.env.get_state()), 128, self.TOTAL_ACTIONS)

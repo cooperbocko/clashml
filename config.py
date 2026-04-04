@@ -5,8 +5,10 @@ import json
 @dataclass
 class SystemSettings:
     is_mac_laptop_screen: bool
-    is_roboflow: bool
     env_path: str
+    digit_model: str
+    gold_model: str
+    level_model: str
 
 @dataclass
 class ScreenBounds:

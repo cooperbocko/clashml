@@ -95,7 +95,7 @@ class Merge:
         'BARBARIAN': Card(2, Synergy.CLAN, Synergy.WARRIOR, 12, True, 'Barbarian'),
         'SKELETON_DRAGON': Card(2, Synergy.UNDEAD, Synergy.DRAGON, 16, False, 'Skeleton Dragon'),
         'WIZARD': Card(2, Synergy.FIRE, Synergy.HINDER, 20, False, 'Wizard'),
-        'DART_GOBLIN': Card(3, Synergy.GOBLIN, Synergy.MARKSMAN, 24, False, 'Dart Goblin'),
+        'DART_GOBLIN': Card(2, Synergy.GOBLIN, Synergy.MARKSMAN, 24, False, 'Dart Goblin'),
         'GIANT': Card(3, Synergy.TITAN, Synergy.SUPERSTAR, 28, True, 'Giant'),
         'MUSKETEER': Card(3, Synergy.NOBEL, Synergy.MARKSMAN, 32, False, 'Musketeer'),
         'VALKYRIE': Card(3, Synergy.CLAN, Synergy.TANK, 36, True, 'Valkyrie'),
@@ -123,58 +123,60 @@ class Merge:
     def __init__(self):
         self.map = [[0 for _ in range(self.ROWS)] for _ in range(self.COLS)]
         self.elixir = 0
+        self.elixir_spent = 0
+        self.round = 1
         self.current_cards = [0 for _ in range(self.N_CARDS)]
         self.hand = [0 for _ in range(int(self.N_CARDS / 4))] 
         self.max_placement = 2
         self.syns = [0 for _ in range(self.N_SYNS)]
         
-    def buy_card(self, card_posiiton: int) -> tuple[bool, int]:
+    def buy_card(self, card_posiiton: int) -> bool:
         card = None
         for hand_card in self.hand:
             if hand_card != 0 and hand_card.hand_position == card_posiiton:
                 card = hand_card.card
         if card == None:
             print("Not a valid position")
-            return (False, -1)
+            return False
         
         if card.base_cost > self.elixir:
             print("Not enough elixir!")
-            return (False, -1)
+            return False
         
         self.elixir -= card.base_cost
+        self.elixir_spent += card.base_cost
         return self.add_card(card)
     
-    def sell_card(self, row: int, col: int) -> tuple[bool, int]:
+    def sell_card(self, row: int, col: int) -> bool:
         if (row < 0 or row >= self.ROWS or col < 0 or col >= self.COLS):
             print("Not in bounds!")
-            return (False, -1)
+            return False
         
         if (self.map[row][col] == 0):
             print("Nohting to sell!")
-            return (False, -1)
+            return False
         
         level_card = self.map[row][col]
         self.current_cards[level_card.get_index()] = 0
         self.map[row][col] = 0
         print("Card sold!")
-        _, reward = self.update_syns()
         self.elixir += level_card.get_cost()
-        return (True, reward)
+        return True
     
-    def move_card(self, oldrow: int, oldcol: int, newrow: int, newcol: int) -> tuple[bool, int]:
+    def move_card(self, oldrow: int, oldcol: int, newrow: int, newcol: int) -> bool:
         if (oldrow < 0 or oldrow >= self.ROWS or oldcol < 0 or oldcol >= self.COLS or newrow < 0 or newrow >= self.ROWS or newcol < 0 or newcol >= self.COLS):
             print("Not in bounds!")
-            return (False, -1)
+            return False
         
         if self.map[oldrow][oldcol] == 0:
             print('No card to move!')
             print(oldrow, oldcol)
-            return (False, -1)
+            return False
         
         if oldrow == self.ROWS - 1 and self.map[newrow][newcol] == 0:
             if self.is_board_full():
                 print('Cannot move card!')
-                return (False, -1)
+                return False
         
         card_incoming = self.map[oldrow][oldcol]
         card_leaving = self.map[newrow][newcol]
@@ -186,17 +188,16 @@ class Merge:
         self.map[oldrow][oldcol] = card_leaving
         self.map[newrow][newcol] = card_incoming
         print('Card moved!')
-        _, reward = self.update_syns()
-        return (True, reward)
+        return True
     
-    def add_card(self, card: Card) -> tuple[bool, int]:
+    def add_card(self, card: Card) -> bool:
         if(self.merge(card)):
             print("merged!")
-            return (True, 3)
+            return True
                     
         if self.is_game_full():
             print("Game is full!")
-            return (False, -1)
+            return False
         
         card_location = (-1, -1)
         if not self.is_board_full():
@@ -245,8 +246,7 @@ class Merge:
         self.current_cards[new_level_card.get_index()] = new_level_card
         self.map[new_level_card.row][new_level_card.col] = new_level_card
         print("Card Added!")
-        _, reward = self.update_syns()
-        return (True, reward)
+        return True
     
     def merge(self, card: Card) -> bool:
         if self.current_cards[card.base_index] == 0:
@@ -266,17 +266,49 @@ class Merge:
         self.map[highest_level_card.row][highest_level_card.col] = highest_level_card
         self.elixir += highest_level_card.level - 1
         return True
+
+    def get_value(self) -> int:
+        # synergies - max = 3
+        synergy_reward = 0
+        for syn in self.syns:
+            if syn >= 2:
+                synergy_reward += 1
+            if syn >= 4:
+                synergy_reward += 1
+            if syn >= 6:
+                synergy_reward += 1
+
+        # level - max = 11 * 4
+        level_reward = 0
+        #placement - max = 6 * 4
+        placement_reward = 0
+        for i in range(self.ROWS):
+            for j in range(self.COLS):
+                card = self.map[i][j]
+                if card != 0:
+                    level_reward += card.level # reward for card levels regardless of placement
+                    if i < self.ROWS - 1:
+                        placement_reward += card.level # reward for card levels of only placed cards
+                        
+        # elixir - max ~ 100
+        elixir_reward = self.elixir / 100
+        elixir_spent_reward = self.elixir_spent / 100    
+        
+        # max output is 4: synergy_max = 1, level_max = 1, placement_max = 1, elixir_max = 0.5, elixir_spent_max = 0.5
+        return synergy_reward/3 + level_reward/44 + placement_reward/24 + elixir_reward/10 + elixir_spent_reward/10
     
     def get_state(self) -> np.array:
+        self.update_syns()
         cards = np.array([1 if card != 0 else 0 for card in self.current_cards])
         cards_positions = np.array([(card.row * 5 + card.col + 1)/25 if card != 0 else 0 for card in self.current_cards])
         hand = np.array([1 if card != 0 else 0 for card in self.hand])
         hand_positions = np.array([(card.hand_position + 1)/3 if card != 0 else 0 for card in self.hand])
-        self.update_syns()
         synergies = np.array(self.syns) / 6
         elixir = np.array([self.elixir/100])
+        elixir_spent = np.array([self.elixir_spent/100])
         max_placement = np.array([self.max_placement/10])
-        state = np.concatenate([cards, cards_positions, hand, hand_positions, synergies, elixir, max_placement])
+        game_round = np.array([self.round/20])
+        state = np.concatenate([cards, cards_positions, hand, hand_positions, synergies, elixir, elixir_spent, max_placement, game_round])
         return state    
     
     def is_board_full(self) -> bool:
@@ -328,6 +360,11 @@ class Merge:
         self.map[row][col] = level_card
         self.current_cards[level_card.get_index()] = level_card
         return True
+    
+    def remove_card(self, row: int, col: int):
+        level_card = self.map[row][col]
+        self.current_cards[level_card.get_index()] = 0
+        self.map[row][col] = 0
         
     def add_starting_card(self, card: str, level: int) -> bool:
         if card not in self.CARDS:
@@ -346,9 +383,7 @@ class Merge:
         self.current_cards[level_card.get_index()] = level_card
         return True
     
-    def update_syns(self) -> tuple[bool, int]:
-        old_syns = self.syns.copy()
-        
+    def update_syns(self):
         self.syns = [0 for _ in range(self.N_SYNS)]
         card_set = set()
         for row in range(self.ROWS - 1):
@@ -359,21 +394,6 @@ class Merge:
         for card in card_set:
             self.syns[card.synergy1.value] += 1
             self.syns[card.synergy2.value] += 1
-            
-        net = 0
-        for old_syn, new_syn in zip(old_syns, self.syns):
-            if old_syn < new_syn and new_syn >= 2:
-                net += 1
-            elif old_syn > new_syn and old_syn >= 2:
-                net -= 1
-        
-        reward = 0
-        if net > 0:
-            reward = 5
-        if net < 0:
-            reward = -5
-            
-        return (True, reward)
     
     def print_map(self):
         res = ""
@@ -423,3 +443,62 @@ class Merge:
         
         b, reward = self.move_card(old_row, old_col, r, c)
         return (b, r, c, reward)
+    
+    def points_to_check(self) -> list[tuple[int, int]]:
+        points = []
+                    
+        if not self.is_board_full():
+            #first front open
+            front = (0,0)
+            for row in range(self.ROWS - 1):
+                if self.map[row][2] == 0:
+                    front = (row, 2)
+                    break
+                elif self.map[row][1] == 0:
+                    front = (row, 1)
+                    break
+                elif self.map[row][3] == 0:
+                    front = (row, 3)
+                    break
+                elif self.map[row][0] == 0:
+                    front = (row, 0)
+                    break
+                elif self.map[row][4] == 0:
+                    front = (row, 4)
+                    break
+            points.append(front)
+                
+            back = (0,0)
+            for row in range(self.ROWS - 2 , -1, -1):
+                if self.map[row][2] == 0:
+                    back = (row, 2)
+                    break
+                elif self.map[row][1] == 0:
+                    back = (row, 1)
+                    break
+                elif self.map[row][3] == 0:
+                    back = (row, 3)
+                    break
+                elif self.map[row][0] == 0:
+                    back = (row, 0)
+                    break
+                elif self.map[row][4] == 0:
+                    back = (row, 4)
+                    break
+            points.append(back)
+        
+        if not self.is_bench_full():
+            bench = (0,0)
+            for i in range(self.COLS):
+                if self.map[self.ROWS - 1][i] == 0:
+                    bench = (self.ROWS - 1, i)
+                    break
+            points.append(bench)
+            
+        #all previous points
+        for row in range(self.ROWS):
+            for col in range(self.COLS):
+                if self.map[row][col] != 0:
+                    points.append((row, col))
+        
+        return points
