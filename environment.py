@@ -1,7 +1,7 @@
 import time
 import random
 
-import click
+import numpy as np
 
 from control import Control
 from config import Config
@@ -10,26 +10,11 @@ from image_match import ImageMatch
 from merge import Merge
 from digits import DetectDigits
 from gold import DetectGold
-from card_present import DetectCardPresent
 from text_detect import TextDetect
-from debug import Debug
 
 class MergeEnv:
-    #actions
-    NUM_HAND_SLOTS = 3
-    NUM_BOARD_SLOTS = 25
-    BUY_START = 0
-    SELL_START = BUY_START + NUM_HAND_SLOTS
-    MOVE_FRONT_START = SELL_START + NUM_BOARD_SLOTS
-    MOVE_BACK_START = MOVE_FRONT_START + NUM_BOARD_SLOTS
-    MOVE_BENCH_START = MOVE_BACK_START + NUM_BOARD_SLOTS
-    NO_ACTION = MOVE_BENCH_START + NUM_BOARD_SLOTS
-    TOTAL_ACTIONS = NO_ACTION + 1
-    
     def __init__(self, config: Config, device):
         self.config = config
-        self.debug = Debug()
-        self.debug_mode = True
         self.control = Control(
             self.config.screen_bounds.left, 
             self.config.screen_bounds.top, 
@@ -45,7 +30,7 @@ class MergeEnv:
         self.gold_model = DetectGold(self.config.system_settings.gold_model, self.config.system_settings.env_path)
         self.text_detect = TextDetect()
         
-    def reset(self):
+    def reset(self) -> tuple[np.array, np.array]:
         self.merge = Merge()
         time.sleep(5)
         for i in range(20):
@@ -62,13 +47,9 @@ class MergeEnv:
         self.get_start_card()
         self.update_state()
         
-        #Debug
-        if self.debug_mode:
-            self.debug.bmap = self.merge.print_map()
-        
         return self.merge.get_state()
     
-    def step(self, action: int) -> tuple[list[int], int, float, list[int], bool]:
+    def step(self, action: int) -> tuple[float, np.array, np.array, bool]:
         #Random check
         if random.random() < 0.1:
             self.update_state(check_elixir=True)
@@ -79,27 +60,15 @@ class MergeEnv:
             self.update_state(check_elixir=True)
             self.game_state = 'checked round'
             
-        prev_state = self.merge.get_state()
-        reward, changed = self.do_action(action)
-        #Debug
-        if self.debug_mode:
-            self.debug.reward = reward
-            name, position = self.decode_action(action)
-            if name == "buy":
-                row = 0
-                col = position
-            else:
-                row = int(position / 5)
-                col = position % 5
-            self.debug.action = f'{name}:{row}-{col}'
-            self.debug.amap = self.merge.print_map()
+        prev_value = self.merge.get_value()
+        value, changed = self.do_action(action)
+        reward = value - prev_value
+        new_state, new_mask = self.merge.get_state()
+        
         if changed:
             self.update_state(check_elixir=False)
         if not self.check_end():
-            #Debug
-            if self.debug_mode:
-                self.debug.print_step()
-            return (prev_state, action, reward, self.merge.get_state(), False)
+            return (reward, new_state, new_mask, False)
         
         #Wait for phase to change
         while self.phase_wait():
@@ -135,26 +104,18 @@ class MergeEnv:
                     reward += 30
                 #Game over
                 self.control.click(self.config.click_points.ok)
-                #Debug
-                if self.debug_mode:
-                    self.debug.reward = reward
-                    self.debug.print_step()
-                return (prev_state, action, reward, self.merge.get_state(), True)
+                return (reward, new_state, new_mask, True)
         #Round over
         if self.merge.max_placement < 6:
             self.merge.max_placement += 1
+        self.merge.round += 1
         self.game_state = 'unchecked round'
-        #Debug
-        if self.debug_mode:
-            self.debug.print_step()
-        return (prev_state, action, reward, self.merge.get_state(), False)
+        return (reward, new_state, new_mask, False)
             
     def phase_wait(self) -> bool:
         screenshot = self.control.screenshot()
         phase = self.control.get_cropped_image(screenshot, self.config.regions.phase_region)
-        #Debug
-        if self.debug_mode:
-            self.debug.save_image(phase, 'phase')
+
         if self.phase_check.detect(phase):
             return True
         return False
@@ -188,11 +149,6 @@ class MergeEnv:
         self.merge.add_starting_card(str.upper(start_card), 1)
         self.control.click(self.config.click_points.safe_click)
         
-        #Debug
-        if self.debug_mode:
-            self.debug.save_image(start_card_image, 'start_card')
-            self.debug.save_image(level_image, 'start_card_level')
-        
     def update_state(self, check_elixir: bool = True) -> tuple[int, list[str]]:
         screenshot = self.control.screenshot()
         
@@ -215,18 +171,6 @@ class MergeEnv:
             card = self.card_match.match(card_img)
             cards.append(card)
         self.merge.update_hand(cards[0], cards[1], cards[2])
-        
-        #Debug
-        if self.debug_mode:
-            self.debug.save_image(screenshot, 'screenshot')
-            if check_elixir:
-                self.debug.save_image(elixir_img, 'elixir')
-            pos = 0
-            for card_img in card_imgs:
-                pos += 1
-                self.debug.save_image(card_img, f'card{pos}')
-            self.debug.elixir = elixir
-            self.debug.cards = cards
             
     def gold_check(self):
         screenshot = self.control.fast_screenshot()
@@ -286,71 +230,49 @@ class MergeEnv:
             click_time += time.time() - temp
                 
         print(f"click: {click_time}, screenshot: {screenshot_time}, match: {match_time}, total: {time.time() - start}")
-    
-    def decode_action(self, action: int) -> tuple[str, int]:
-        if action < self.SELL_START:
-            return ("buy", action - self.BUY_START)
-        elif action < self.MOVE_FRONT_START:
-            return ("sell", action - self.SELL_START)
-        elif action < self.MOVE_BACK_START:
-            return ("move_to_front", action - self.MOVE_FRONT_START)
-        elif action < self.MOVE_BENCH_START:
-            return ("move_to_back", action - self.MOVE_BACK_START)
-        elif action < self.NO_ACTION:
-            return ("move_to_bench", action - self.MOVE_BENCH_START)
-        else:
-            return ("no_action", 0)
         
+    def decode_action(self, action: int) -> tuple[str, int]:
+        # action, row, col, row, col
+        if 0 <= action <= 2:
+            return ("buy", action, 0, 0, 0)
+        elif 3 <= action <= 27:
+            r = (action - 3) // 5
+            c = (action - 3) % 5
+            return ("sell", r, c, 0, 0)
+        elif 28 <= action <= 652:
+            from_r = ((action - 28) // 25) // 5
+            from_c = ((action - 28) // 25) % 5
+            to_r = ((action - 28) % 25) // 5
+            to_c = ((action - 28) % 25) % 5
+            return ("move", from_r, from_c, to_r, to_c)
+        else:
+            return ("no_action", action, 0, 0, 0)
+
     def do_action(self, action: int) -> tuple[int, bool]:
-        action_name, position = self.decode_action(action)
-        row = int(position / 5)
-        col = position % 5
-        fpoint = self.config.click_points.board[row][col]
-        reward = 0
-        valid = True
+        action_name, row, col, to_row, to_col = self.decode_action(action)
         changed = True
         
         if action_name == "buy":
-            valid, reward = self.merge.buy_card(position)
-            changed = valid
-            if valid:
-                if position == 0:
-                    self.control.click(self.config.click_points.hand[0])
-                elif position == 1:
-                    self.control.click(self.config.click_points.hand[1])
-                else:
-                    self.control.click(self.config.click_points.hand[2])
+            if row == 0:
+                self.control.click(self.config.click_points.hand[0])
+            elif row == 1:
+                self.control.click(self.config.click_points.hand[1])
+            else:
+                self.control.click(self.config.click_points.hand[2])
+            self.merge.buy_card(row)
         elif action_name == "sell":
-            valid, reward = self.merge.sell_card(row, col)
-            changed = valid
-            
-            if valid:
-                self.control.drag(fpoint, self.config.click_points.hand[0])
-        elif action_name == "move_to_front":
-            valid, r, c, reward = self.merge.move_to_front(row, col)
+            self.control.drag(self.config.click_points.board[row][col], self.config.click_points.hand[0])
+            self.merge.sell_card(row, col)
+        elif action_name == "move":
+            fpoint = self.config.click_points.board[row][col]
+            tpoint = self.config.click_points.board[to_row][to_col]
+            self.control.drag(fpoint, tpoint)
+            self.merge.move_card(row, col, to_row, to_col)
             changed = False
-            tpoint = self.config.click_points.board[r][c]
-            
-            if valid:
-                self.control.drag(fpoint, tpoint)
-        elif action_name == "move_to_back":
-            valid, r, c, reward = self.merge.move_to_back(row, col)
-            changed = False
-            tpoint = self.config.click_points.board[r][c]
-            
-            if valid:
-                self.control.drag(fpoint, tpoint)
-        elif action_name == "move_to_bench":
-            valid, r, c, reward = self.merge.move_to_bench(row, col)
-            changed = False
-            tpoint = self.config.click_points.board[r][c]
-            
-            if valid:
-                self.control.drag(fpoint, tpoint)
         else:
             changed = False
             
-        return (reward, changed)
+        return (self.merge.get_value(), changed)
     
     def check_end(self) -> bool:
         end = self.control.check_pixel(self.config.click_points.end_bar, self.config.system_settings.is_mac_laptop_screen)
