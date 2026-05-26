@@ -1,5 +1,4 @@
 from PIL import Image
-from click import pause
 from mss import mss
 import pyautogui
 import time
@@ -12,19 +11,20 @@ class Control:
         self.right = right
         self.bottom = bottom
         self.click_delay = click_delay
-        pyautogui.PAUSE = 0
+        pyautogui.PAUSE = click_delay
         self.mss = mss()
         
     def click(self, point: list[int]):
         pyautogui.click(x=point[0] + self.left, y=point[1] + self.top, _pause=False)
-        time.sleep(self.click_delay)
+        #time.sleep(self.click_delay)
         
     def drag(self, start_point: list[int], end_point: list[int]):
         pyautogui.moveTo(start_point[0] + self.left, start_point[1] + self.top)
         pyautogui.mouseDown()
+        #time.sleep(self.click_delay)
         pyautogui.moveTo(end_point[0] + self.left, end_point[1] + self.top)
         pyautogui.mouseUp()
-        time.sleep(self.click_delay)
+        #time.sleep(self.click_delay)
             
     def screenshot(self) -> Image:
         region = (self.left, self.top, self.right - self.left, self.bottom - self.top)

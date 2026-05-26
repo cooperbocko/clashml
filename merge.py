@@ -7,7 +7,6 @@ import numpy as np
 class Card:
     base_cost: int
     synergy1: int
-    synergy2: int
     is_frontline: bool
     name: str
     id: int
@@ -24,89 +23,53 @@ class LeveledCard:
 class Synergy(Enum):
     EMPTY = 0
     NOBEL = 1
-    TANK = 2
-    CLAN = 3
-    MARKSMAN = 4
-    GOBLIN = 5
-    ASSASSIN = 6
-    WARRIOR = 7
-    UNDEAD = 8
-    DRAGON = 9
-    FIRE = 10
-    HINDER = 11
-    TITAN = 12
-    SUPERSTAR = 13
-    ACE = 14
-    
-'''
-ALL_CARDS = {
-    'KNIGHT' : Card(2, Synergy.NOBEL, Synergy.TANK, 0, True, 'Knight'),
-    'PRINCE' : Card(3, Synergy.NOBEL, Synergy.BRAWLER, 4, True, 'Prince'),
-    'PRINCESS' : Card(4, Synergy.NOBEL, Synergy.BLASTER, 8, False, 'Princess'),
-    'GOLDEN_KNIGHT' : Card(5, Synergy.NOBEL, Synergy.ASSASSIN, 12, True, 'Golden Knight'),
-    
-    'ARCHER' : Card(2, Synergy.CLAN, Synergy.RANGER, 16, False, 'Archer'),
-    'VALKYRIE' : Card(3, Synergy.CLAN, Synergy.BRUTALIST, 20, True, 'Valkyrie'),
-    'BARBARIAN' : Card(2, Synergy.CLAN, Synergy.BRAWLER, 24, True, 'Barbarian'),
-    'ARCHER_QUEEN' : Card(5, Synergy.CLAN, Synergy.RANGER, 28, False, 'Archer Queen'),
-    
-    'DART_GOBLIN' : Card(3, Synergy.GOBLIN, Synergy.RANGER, 32, False, 'Dart Goblin'),
-    'GOBLIN' : Card(2, Synergy.GOBLIN, Synergy.ASSASSIN, 36, True, 'Goblin'),
-    'SPEAR_GOBLIN' : Card(2, Synergy.GOBLIN, Synergy.BLASTER, 40, False, 'Spear Goblin'),
-    'GOBLIN_MACHINE' : Card(4, Synergy.GOBLIN, Synergy.BRUTALIST, 44, True, 'Gobin Machine'),
-    
-    'SKELETON_GIANT' : Card(3, Synergy.UNDEAD, Synergy.BRAWLER, 48, True, 'Skeleton Giant'),
-    'ROYAL_GHOST' : Card(4, Synergy.UNDEAD, Synergy.ASSASSIN, 52, True, 'Royal Ghost'),
-    'SKELETON_BOMBER' : Card(2, Synergy.UNDEAD, Synergy.BLASTER, 56, False, 'Skeleton Bomber'),
-    'SKELETON_KING' : Card(5, Synergy.UNDEAD, Synergy.BRUTALIST, 60, True, 'Skeleton King'),
-    
-    'MEGA_KNIGHT' : Card(4, Synergy.ACE, Synergy.BRAWLER, 64, True, 'Mega Knight'),
-    'EXECUTIONER' : Card(3, Synergy.ACE, Synergy.BLASTER, 68, False, 'Executioner'),
-    'PEKKA' : Card(3, Synergy.PEKKA, Synergy.BRAWLER, 72, True, 'Pekka'),
-    'BANDIT' : Card(4, Synergy.ACE, Synergy.AVENGER, 76, True, 'Bandit'),
-    
-    'ELECTRO_GIANT': Card(3, Synergy.GIANT, Synergy.SUPERSTAR, 80, True, 'Eletro Giant'),
-    'ELECTRO_WIZARD': Card(4, Synergy.ELECTRIC, Synergy.MAGE, 84, False, 'Electro Wizard'),
-    'WIZARD': Card(2, Synergy.CLAN, Synergy.BLASTER, 88, False, 'Wizard'),
-    'BABY_DRAGON': Card(4, Synergy.FIRE, Synergy.BLASTER, 92, False, 'Baby Dragon'),
-    
-    'WITCH': Card(4, Synergy.UNDEAD, Synergy.SUPERSTAR, 96, False, 'Witch'),
-    'SKELETON_DRAGON': Card(2, Synergy.UNDEAD, Synergy.RANGER, 100, False, 'Skeleton Dragon'),
-    'MUSKETEER': Card(3, Synergy.NOBEL, Synergy.SUPERSTAR, 104, False, 'Musketeer'),
-    
-    'MINI_PEKKA': Card(2, Synergy.PEKKA, Synergy.BRUTALIST, 108, True, 'Mini Pekka'),
-    'ROYAL_GIANT': Card(2, Synergy.GIANT, Synergy.RANGER, 112, False, 'Royal Giant'),
-    'MONK': Card(5, Synergy.ACE, Synergy.SUPERSTAR, 116, True, 'Monk'),
-    
-    'GIANT': Card(3, Synergy.TITAN, Synergy.SUPERSTAR, 120, True, 'Giant'),
-    'GOBLIN_DEMOLISHER': Card(3, Synergy.GOBLIN, Synergy.WARRIOR, 124, True, 'Goblin Demolisher')
-    }'''
+    CLAN = 2
+    GOBLIN = 3
+    UNDEAD = 4
+    FOREST = 5
+    BOSS = 6
 
 class Merge: 
     CARDS = {
-        'EMPTY' : Card(0, 0, 0, False, 'Empty', 0),
-        'KNIGHT': Card(2, Synergy.NOBEL, Synergy.TANK, True, 'Knight', 1),
-        'ARCHER': Card(2, Synergy.CLAN, Synergy.MARKSMAN, False, 'Archer', 2),
-        'GOBLIN': Card(2, Synergy.GOBLIN, Synergy.ASSASSIN, True, 'Goblin', 3),
-        'BARBARIAN': Card(2, Synergy.CLAN, Synergy.WARRIOR, True, 'Barbarian'),
-        'SKELETON_DRAGON': Card(2, Synergy.UNDEAD, Synergy.DRAGON, False, 'Skeleton Dragon', 4),
-        'WIZARD': Card(2, Synergy.FIRE, Synergy.HINDER, False, 'Wizard', 5),
-        'DART_GOBLIN': Card(2, Synergy.GOBLIN, Synergy.MARKSMAN, False, 'Dart Goblin', 6),
-        'GIANT': Card(3, Synergy.TITAN, Synergy.SUPERSTAR, True, 'Giant', 7),
-        'MUSKETEER': Card(3, Synergy.NOBEL, Synergy.MARKSMAN, False, 'Musketeer', 8),
-        'VALKYRIE': Card(3, Synergy.CLAN, Synergy.TANK, True, 'Valkyrie', 9),
-        'ROYAL_GIANT': Card(3, Synergy.TITAN, Synergy.MARKSMAN, False, 'Royal Giant', 10),
-        'SKELETON_GIANT': Card(3, Synergy.UNDEAD, Synergy.TANK, True, 'Skeleton Giant', 11),
-        'GOBLIN_DEMOLISHER': Card(3, Synergy.GOBLIN, Synergy.WARRIOR, False, 'Goblin Demolisher', 12),
-        'PEKKA': Card(4, Synergy.ACE, Synergy.SUPERSTAR, True, 'Pekka', 13),
-        'WITCH': Card(4, Synergy.UNDEAD, Synergy.HINDER, False, 'Witch', 14),
-        'BABY_DRAGON': Card(4, Synergy.FIRE, Synergy.DRAGON, False, 'Baby Dragon', 15),
-        'PRINCE': Card(4, Synergy.NOBEL, Synergy.WARRIOR, True, 'Prince', 16),
-        'GOBLIN_MACHINE': Card(4, Synergy.GOBLIN, Synergy.SUPERSTAR, True, 'Gobin Machine', 17),
-        'SKELETON_KING': Card(5, Synergy.UNDEAD, Synergy.WARRIOR, True, 'Skeleton King', 18),
-        'GOLDEN_KNIGHT' : Card(5, Synergy.NOBEL, Synergy.ASSASSIN, True, 'Golden Knight', 19),
-        'ARCHER_QUEEN' : Card(5, Synergy.CLAN, Synergy.SUPERSTAR, False, 'Archer Queen', 20),
-        'MONK': Card(5, Synergy.ACE, Synergy.TANK, True, 'Monk', 21),
+        'EMPTY' : Card(0, 0, False, 'Empty', 0),
+        
+        'KNIGHT': Card(2, Synergy.NOBEL, True, 'Knight', 1),
+        'ARCHER': Card(2, Synergy.CLAN, False, 'Archer', 2),
+        'GOBLIN': Card(2, Synergy.GOBLIN, True, 'Goblin', 3),
+        'SPEAR_GOBLIN': Card(2, Synergy.GOBLIN, False, 'Spear Goblin', 4),
+        'SKELETON_BOMBER': Card(2, Synergy.UNDEAD, False, 'Skeleton Bomber', 5),
+        'BARBARIAN': Card(2, Synergy.CLAN, True, 'Barbarian', 6),
+        'FIRECRACKER': Card(2, Synergy.FOREST, False, 'Firecracker', 7),
+        
+        'MUSKETEER': Card(3, Synergy.NOBEL, False, 'Musketeer', 8),
+        'MINI_PEKKA': Card(3, Synergy.BOSS, True, 'Mini Pekka', 9),
+        'VALKYRIE': Card(3, Synergy.CLAN, True, 'Valkyrie', 10),
+        'ROYAL_GIANT': Card(3, Synergy.NOBEL, False, 'Royal Giant', 11),
+        'PRINCE': Card(3, Synergy.NOBEL, True, 'Prince', 12),
+        'SKELETON_GIANT': Card(3, Synergy.UNDEAD, True, 'Skeleton Giant', 13),
+        'DART_GOBLIN': Card(3, Synergy.GOBLIN, False, 'Dart Goblin', 14),
+        'GOBLIN_DEMOLISHER': Card(3, Synergy.GOBLIN, False, 'Goblin Demolisher', 15),
+        'ROYAL_GHOST': Card(3, Synergy.UNDEAD, True, 'Royal Ghost', 16),
+        'MAGIC_ARCHER': Card(3, Synergy.FOREST, False, 'Magic Archer', 17),
+        'EXECUTIONER': Card(3, Synergy.FOREST, False, 'Executioner', 18),
+        
+        'GIANT': Card(4, Synergy.CLAN, True, 'Giant', 19),
+        'GOBLIN_CAGER': Card(4, Synergy.GOBLIN, False, 'Goblin Cager', 20),
+        'SKELETON_DRAGONS': Card(4, Synergy.UNDEAD, False, 'Skeleton Dragons', 21),
+        'WIZARD': Card(4, Synergy.CLAN, False, 'Wizard', 22),
+        'PEKKA': Card(4, Synergy.BOSS, True, 'Pekka', 23),
+        'WITCH': Card(4, Synergy.UNDEAD, False, 'Witch', 24),
+        'BABY_DRAGON': Card(4, Synergy.FOREST, False, 'Baby Dragon', 25),
+        'PRINCESS': Card(4, Synergy.NOBEL, False, 'Princess', 26),
+        'MEGA_KNIGHT': Card(4, Synergy.BOSS, True, 'Mega Knight', 27),
+        'BANDIT': Card(4, Synergy.FOREST, True, 'Bandit', 28),
+        'GOBLIN_MACHINE': Card(4, Synergy.GOBLIN, False, 'Goblin Machine', 29),
+        
+        'SKELETON_KNIGHT': Card(5, Synergy.UNDEAD, True, 'Skeleton Knight', 30),
+        'GOLDEN_KNIGHT': Card(5, Synergy.NOBEL, True, 'Golden Knight', 31),
+        'ARCHER_QUEEN': Card(5, Synergy.CLAN, False, 'Archer Queen', 32),
+        'BOSS_BANDIT': Card(5, Synergy.FOREST, True, 'Boss Bandit', 33),
+        'MONK': Card(5, Synergy.BOSS, True, 'Monk', 34)
     }
     
     #consts
@@ -121,10 +84,11 @@ class Merge:
         self.elixir = 0
         self.elixir_spent = 0
         self.round = 1
-        self.hand: list[LeveledCard] = [3]
+        self.hand: list[Card] = [None for _ in range(self.HAND_SIZE)]
         self.max_placement = 2
         self.syns = [0 for _ in range(self.N_SYNS)]
         self.action_mask = np.zeros(654, dtype=np.float32)
+        self.current_cards = {} # (name, level) = (r, c)
         
     def buy_card(self, card_position: int) -> bool:
         if card_position < 0 or card_position >= len(self.hand):
@@ -155,6 +119,7 @@ class Merge:
         
         level_card = self.map[row][col]
         self.map[row][col] = 0
+        self.current_cards.pop((level_card.card.name, level_card.level))
         self.elixir += level_card.get_cost()
         print("Card sold!")
         return True
@@ -175,12 +140,10 @@ class Merge:
                 return False
         
         card_incoming = self.map[oldrow][oldcol]
+        self.current_cards[(card_incoming.card.name, card_incoming.level)] = (newrow, newcol)
         card_leaving = self.map[newrow][newcol]
-        card_incoming.row = newrow
-        card_incoming.col = newcol
         if (card_leaving != 0):
-            card_leaving.row = oldrow
-            card_leaving.col = oldcol
+            self.current_cards[(card_leaving.card.name, card_leaving.level)] = (oldrow, oldcol)
         self.map[oldrow][oldcol] = card_leaving
         self.map[newrow][newcol] = card_incoming
         print('Card moved!')
@@ -239,27 +202,29 @@ class Merge:
                     break
         
         new_level_card = LeveledCard(card, 1)
-        self.map[new_level_card.row][new_level_card.col] = new_level_card
+        self.map[card_location[0]][card_location[1]] = new_level_card
+        self.current_cards[(card.name, 1)] = card_location
         print("Card Added!")
         return True
     
     def merge(self, card: Card) -> bool:
-        if self.current_cards[card.base_index] == 0:
-            return False 
-        
-        highest_level_card = self.current_cards[card.base_index]
-        for i in range(card.base_index, card.base_index + 4):
-            if self.current_cards[i] != 0:
-                highest_level_card = self.current_cards[i]
-                self.current_cards[i] = 0
-                self.map[highest_level_card.row][highest_level_card.col] = 0
-            else:
+        highest_level_card = None
+        r, c = (None, None)
+        for i in range(1, 4):
+            if (card.name, i) not in self.current_cards:
                 break
-            
-        highest_level_card.level = highest_level_card.level + 1
-        self.map[highest_level_card.row][highest_level_card.col] = highest_level_card
-        self.elixir += highest_level_card.level - 1
-        return True
+            else:
+                r, c = self.current_cards[(card.name, i)]
+                highest_level_card = self.map[r][c]
+                self.current_cards.pop((card.name, i))
+                self.map[r][c] = 0
+                
+        if highest_level_card:
+            highest_level_card.level += 1
+            self.map[r][c] = highest_level_card
+            self.current_cards[(card.name, highest_level_card.level)] = (r, c)
+            return True
+        return False
 
     def get_value(self) -> int:
         self.update_syns()
@@ -301,14 +266,14 @@ class Merge:
             for j in range(self.COLS):
                 card = self.map[i][j]
                 if card != 0:
-                    board_cards[i * self.ROWS + j] = [card.card.id, card.card.synergy1, card.card.synergy2, card.level, card.card.base_cost]
+                    board_cards[i * self.ROWS + j] = [card.card.id, card.card.synergy1.value, card.card.synergy2.value, card.level, card.card.base_cost]
                 else:
                     board_cards[i * self.ROWS + j] = [0, 0, 0, 0, 0]
                     
-        shop_cards = np.zeros((3, 5, 2), dtype=np.int64)
+        shop_cards = np.zeros((3, 5), dtype=np.int64)
         for i in range(len(self.hand)):
             card = self.hand[i]
-            shop_cards[i] = [card.card.id, card.card.synergy1, card.card.synergy2, card.level, card.card.base_cost]
+            shop_cards[i] = [card.id, card.synergy1.value, card.synergy2.value, 1, card.base_cost]
             
         game_data = np.array([
             self.elixir / 100.0,
@@ -353,9 +318,9 @@ class Merge:
             print('Card(s) not found!')
             return False
         
-        card_1 = LeveledCard(self.CARDS[card1], 1, -1, -1, 0)
-        card_2 = LeveledCard(self.CARDS[card2], 1, -1, -1, 1)
-        card_3 = LeveledCard(self.CARDS[card3], 1, -1, -1, 2)
+        card_1 = self.CARDS[card1]
+        card_2 = self.CARDS[card2]
+        card_3 = self.CARDS[card3]
         self.hand[0] = card_1
         self.hand[1] = card_2
         self.hand[2] = card_3
@@ -383,7 +348,7 @@ class Merge:
             print('Card not found!')
             return False
         
-        level_card = LeveledCard(self.CARDS[card], level, -1, -1)
+        level_card = LeveledCard(self.CARDS[card], level)
         if level_card.card.is_frontline:
             level_card.row = 0
             level_card.col = 2
@@ -403,7 +368,6 @@ class Merge:
                     
         for card in card_set:
             self.syns[card.synergy1.value] += 1
-            self.syns[card.synergy2.value] += 1
     
     def print_map(self):
         res = ""
@@ -517,8 +481,8 @@ class Merge:
         self.action_mask.fill(1.0)
         #Buy 0-2
         if not self.is_game_full():
-            for index, level_card in enumerate(self.hand):
-                if self.elixir >= level_card.card.base_cost:
+            for index, card in enumerate(self.hand):
+                if self.elixir >= card.base_cost:
                     self.action_mask[0 + index] = 0.0
         #Sell 3-27
         for r in range(self.ROWS):

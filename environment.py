@@ -145,7 +145,7 @@ class MergeEnv:
             self.config.regions.card_level_region
         )
         #TODO: Make a model for card level
-        start_card_level = int(self.level_match.match(level_image))
+        #start_card_level = int(self.level_match.match(level_image))
         self.merge.add_starting_card(str.upper(start_card), 1)
         self.control.click(self.config.click_points.safe_click)
         

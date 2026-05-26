@@ -4,7 +4,7 @@
         "env_path": "./secret.env",
         "digit_model": "clash-digit-detection-zjhdw/5",
         "gold_model": "merge-gold-circle-detect-8yzjn/4",
-        "level_model": "level_model",
+        "level_model": "level_model"
     },
 
     "screen_bounds": {

@@ -15,7 +15,7 @@ class GameState(TypedDict):
     game_data: np.ndarray
 
 class ActorCritic(nn.Module):
-    def __init__(self, n_cards, n_syns, n_stats):
+    def __init__(self, n_cards, n_syns, n_stats, device):
         super().__init__()
         self.card_encoder = CardEncoder(n_cards, n_syns, 64, 32)
         self.pos_dim = get_emb_dim(25)
@@ -25,13 +25,30 @@ class ActorCritic(nn.Module):
         self.lstm = LSTM(32 + self.pos_dim + 32 + 32, 128)
         self.action_heads = ActionHeads(128, 32, self.pos_dim)
         self.critic_head = nn.Linear(128, 1)
+        self.device = device
         
     def forward(self, board_cards, board_pos, shop_cards, game_data, hidden=None):
+        is_batched_sequence = (board_cards.dim() == 4)
+        
+        if is_batched_sequence:
+            B, T, S, F = board_cards.shape
+            board_cards = board_cards.view(B * T, S, F)
+            board_pos = board_pos.view(B * T, S)
+            shop_cards = shop_cards.view(B * T, -1, shop_cards.shape[-1])
+            game_data = game_data.view(B * T, -1)
+        else:
+            if board_cards.dim() == 2:
+                board_cards = board_cards.unsqueeze(0)
+                board_pos = board_pos.unsqueeze(0)
+                shop_cards = shop_cards.unsqueeze(0)
+                game_data = game_data.unsqueeze(0)
+            B, T = board_cards.shape[0], 1
+        
         board_summary, board_embs = self.board_encoder(board_cards, board_pos)
         shop_summary, shop_embs = self.shop_encoder(shop_cards)
         data_summary = self.data_encoder(game_data)
         combined = torch.cat([board_summary, shop_summary, data_summary], dim=-1)
-        combined = combined.unsqueeze(1)
+        combined = combined.view(B, T, -1)
         
         lstm_out, hidden = self.lstm(combined, hidden)
         logits = self.action_heads(lstm_out, shop_embs, board_embs)
@@ -55,23 +72,26 @@ class ActionHeads(nn.Module):
         self.do_nothing = nn.Linear(hidden_size, 1)
         
     def forward(self, lstm_out, shop_cards, board_cards, mask=None):
-        buy = self.buy(lstm_out).unsqueeze(-1)
-        sell = self.sell(lstm_out).unsqueeze(-1)
-        smove = self.src_move(lstm_out).unsqueeze(-1)
-        dmove = self.dst_move(lstm_out).unsqueeze(-1)
+        B, T, H = lstm_out.shape
+        lstm_flat = lstm_out.view(B * T, H)
+        
+        buy = self.buy(lstm_flat).unsqueeze(-1)
+        sell = self.sell(lstm_flat).unsqueeze(-1)
+        smove = self.src_move(lstm_flat).unsqueeze(-1)
+        dmove = self.dst_move(lstm_flat).unsqueeze(-1)
         
         buy_logits = torch.bmm(shop_cards, buy).squeeze(-1)
         sell_logits = torch.bmm(board_cards, sell).squeeze(-1)
         smove_logits = torch.bmm(board_cards, smove).squeeze(-1)
         dmove_logits = torch.bmm(board_cards, dmove).squeeze(-1)
         move_logits = smove_logits.unsqueeze(2) + dmove_logits.unsqueeze(1)
-        move_logits = move_logits.view(lstm_out.size(0), -1)
-        nothing_logits = self.do_nothing(lstm_out)
+        move_logits = move_logits.view(B * T, -1)
+        nothing_logits = self.do_nothing(lstm_flat)
         
         all_logits = torch.cat([buy_logits, sell_logits, move_logits, nothing_logits], dim=-1)
         if mask:
             all_logits = all_logits + (mask * -1e9)
-        return all_logits
+        return all_logits.view(B, T, -1)
 
 class LSTM(nn.Module):
     def __init__(self, input_size, hidden_size):
@@ -88,7 +108,7 @@ class CardEncoder(nn.Module):
         super(CardEncoder, self).__init__()
         
         self.id_emb = nn.Embedding(n_cards, get_emb_dim(n_cards))
-        self.syn_emb = nn.EmbeddingBag(n_syns, get_emb_dim(n_syns), mode='mean')
+        self.syn_emb = nn.EmbeddingB(n_syns, get_emb_dim(n_syns))
         input_size = get_emb_dim(n_cards) + get_emb_dim(n_syns) + 2
         self.layers = nn.Sequential(
             nn.Linear(input_size, hidden_size),
@@ -97,10 +117,10 @@ class CardEncoder(nn.Module):
         )
     
     def forward(self, card_data):
-        id_emb = self.id_emb(card_data[:, 0])
-        syn_emb = self.syn_emb(card_data[:, 1:3])
-        level = card_data[:, 3].view(-1, 1)
-        cost = card_data[:, 4].view(-1, 1)
+        id_emb = self.id_emb(card_data[:, 0].long())
+        syn_emb = self.syn_emb(card_data[:, 1].long())
+        level = card_data[:, 2].long().view(-1, 1)
+        cost = card_data[:, 3].long().view(-1, 1)
         x = torch.cat([id_emb, syn_emb, level, cost], dim=1)
         return self.layers(x)
     
@@ -111,7 +131,7 @@ class BoardEncoder(nn.Module):
         self.pos_emb = nn.Embedding(n_pos, pos_dim)
     
     def forward(self, card_batch, pos_indices):
-        batch_size, n_slots, _ = card_batch.size()
+        batch_size, n_slots, _ = card_batch.shape
         flat_cards = card_batch.view(-1, card_batch.size(-1))
         card_enc = self.card_encoder(flat_cards)
         flat_pos = pos_indices.view(-1)
@@ -127,8 +147,8 @@ class ShopEncoder(nn.Module):
         self.card_encoder = card_encoder
     
     def forward(self, shop_cards):
-        batch_size, shop_size, _ = shop_cards.size()
-        flat_shop = shop_cards.view(batch_size, shop_size, -1)
+        batch_size, shop_size, _ = shop_cards.shape
+        flat_shop = shop_cards.view(-1, shop_cards.size(-1))
         shop_embs = self.card_encoder(flat_shop)
         shop_embs = shop_embs.view(batch_size, shop_size, -1)
         summary = torch.sum(shop_embs, dim=1)
@@ -175,6 +195,8 @@ class ReplayBuffer:
     
     def sample_batch(self, batch_size, seq_len):
         batch = []
+        if len(self.episodes) == 0:
+            return batch
         for _ in range(batch_size):
             episode = random.choice(self.episodes)
             if len(episode) < seq_len:
@@ -183,6 +205,13 @@ class ReplayBuffer:
                 start = random.randint(0, len(episode) - seq_len)
                 batch.append(episode[start:start+seq_len])
         return batch
+    
+    def save(self, filepath='./buffer.pt'):
+        torch.save(self.episodes, filepath)
+    
+    def load(self, filepath='./buffer.pt'):
+        self.episodes = torch.load(filepath)
+        
     
 def collate_batch(batch: list[list[Experience]], device: torch.device, seq_len: int=16):
     batch_size = len(batch)
@@ -233,6 +262,7 @@ class PPOTrainer:
     def train(self, batch_size, seq_len):
         batch = self.replay_buffer.sample_batch(batch_size, seq_len)
         if batch:
+            batch = collate_batch(batch, self.model.device, seq_len)
             self.train_step(batch)
         
     def train_step(self, batch):
@@ -268,7 +298,7 @@ class PPOTrainer:
             self.optimizer.step()
 
     def compute_advantages(self, rewards, dones, values, next_values, mask, gamma=0.99, lam=0.95):
-        batch_size, T = rewards.shape()
+        batch_size, T = rewards.shape
         advantages = torch.zeros_like(rewards)
         gae = 0
             

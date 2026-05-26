@@ -1,5 +1,5 @@
-from agent import Agent
+from ppoagent import PPOAgent
 
-bot = Agent('configs/YOURCONFIG', True)
+bot = PPOAgent('./configs/mac.json')
 
-bot.train(100)
+bot.train(2)
