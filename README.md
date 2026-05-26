@@ -34,6 +34,8 @@
 
 <h3 align="center">Merge Tactics Machine Learning</h3>
 
+<h3 align="center">No longer working or being updated!</h3>
+
   <p align="center">
     Creating a Reinforement Learning bot to play the Merge Tactics game mode in Clash Royale
     <br />
